@@ -5,7 +5,7 @@ setup( name='pyhm',
        description='A Python package for defining hierarchical Bayesian models, with routines to optimise and sample from the posterior distribution.',
        author='Tom Evans',
        author_email='tom.evans@astro.ox.ac.uk',
-       url='https://github.com/splox/pyhm',
+       url='https://github.com/tomevans/pyhm',
        packages=[ 'pyhm' ],
        )
        
