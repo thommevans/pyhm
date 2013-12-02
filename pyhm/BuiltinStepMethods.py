@@ -100,6 +100,7 @@ class MetropolisHastings():
             # Proceed to perturb the current parameter only, carrying
             # on until the iteration limit has been reached:
             accfrac_j = 0
+            current_logp = mcmc.logp()
             while i<m+1:
 
                 step_size_j = self.step_sizes[key_j]
@@ -120,7 +121,6 @@ class MetropolisHastings():
                 else:
                     k = i%n # iteration number within current tuning interval
                     i += 1
-                    current_logp = mcmc.logp()
 
                     # If this is the first iteration in a new tuning interval,
                     # reset all parameters to their original values to avoid
@@ -147,7 +147,7 @@ class MetropolisHastings():
 
                     # Add the result to the chain:
                     tuning_chains[key_j]['values'][k] = current_values[key_j]
-                    tuning_chains[key_j]['logp'][k] = mcmc.model.logp()
+                    tuning_chains[key_j]['logp'][k] = current_logp
                     
                     # If we have reached the end of the current tuning interval,
                     # adjust the step size of the current parameter based on the
