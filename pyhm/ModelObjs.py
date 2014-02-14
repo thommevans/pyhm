@@ -251,8 +251,8 @@ class Stoch():
             err_str = '\nStochastic {0} value not defined - can\'t compute logp'.\
                       format( self.name )
             raise ValueError(err_str)
-        kwargs = Utils.extract_stochastics_values( self.parents )
-        logp_value = logp_func( value=self.value, **kwargs )
+        parent_vals = Utils.extract_stochastics_values( self.parents )
+        logp_value = logp_func( self.value, parent_vals )
         return logp_value
 
     def random( self ):

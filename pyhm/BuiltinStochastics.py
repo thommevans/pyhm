@@ -24,24 +24,24 @@ def Gaussian( name, mu=0.0, sigma=1.0, value=None, observed=False, dtype=float )
 
     parents = { 'mu':mu, 'sigma':sigma }
     parent_values = Utils.extract_stochastics_values( parents )
-    mu_value = parent_values['mu']
-    sigma_value = parent_values['sigma']
     
-    def logp( value=value, mu=mu_value, sigma=sigma_value ):
+    def logp( value, parent_values ):
+        mu_value = parent_values['mu']
+        sigma_value = parent_values['sigma']
         if np.rank( value )==0:
-            logp = -0.5*math.log( 2*np.pi*( sigma**2. ) ) \
-                   - ( ( value - mu )**2. )/( 2*( sigma**2. ) )
+            logp = -0.5*math.log( 2*np.pi*( sigma_value**2. ) ) \
+                   - ( ( value - mu_value )**2. )/( 2*( sigma_value**2. ) )
         else:
-            logp = np.sum( -0.5*np.log( 2*np.pi*( sigma**2. ) ) \
-                           - ( ( value - mu )**2. )/( 2*( sigma**2. ) ) )
+            logp = np.sum( -0.5*np.log( 2*np.pi*( sigma_value**2. ) ) \
+                           - ( ( value - mu_value )**2. )/( 2*( sigma_value**2. ) ) )
         return logp
         
-    def random( mu=mu_value, sigma=sigma_value ):
+    def random( mu=parent_values['mu'], sigma=parent_values['sigma'] ):
         return np.random.normal( mu, sigma )
 
     if value==None:
-        value = random( mu=mu_value, sigma=sigma_value )
-    parents = { 'mu':mu, 'sigma':sigma }
+        value = random( mu=parent_values['mu'], sigma=parent_values['sigma'] )
+
     dictionary = { 'name':name, 'observed':observed, 'dtype':dtype, 'parents':parents, \
                    'value':value, 'logp':logp, 'random':random }
 
@@ -62,30 +62,32 @@ def Uniform( name, lower=0.0, upper=1.0, value=None, observed=False, dtype=float
 
     parents = { 'lower':lower, 'upper':upper }
     parent_values = Utils.extract_stochastics_values( parents )
-    lower_value = parent_values['lower']
-    upper_value = parent_values['upper']
+    #lower_value = parent_values['lower']
+    #upper_value = parent_values['upper']
 
     if ( value!=None )*( np.rank( value )>0 ):
         n = len( value.flatten() )
     else:
         n = 1
 
-    def logp( value=value, lower=lower_value, upper=upper_value ):
-        if np.any( value>=lower )*np.any( value<=upper ):
+    def logp( value, parent_values ):
+        lower_value = parent_values['lower']
+        upper_value = parent_values['upper']
+        if np.any( value>=lower_value )*np.any( value<=upper_value ):
             logp = 1.0
         else:
             logp = -np.inf
         return logp
 
-    def random( lower=lower_value, upper=upper_value ):
+    def random( lower=parent_values['lower'], upper=parent_values['upper'] ):
         if n>1:
             return np.random.uniform( low=lower, high=upper, size=n )
         else:
             return np.random.uniform( low=lower, high=upper )
 
     if value==None:
-        value = random( lower=lower_value, upper=upper_value )
-    parents = { 'lower':lower, 'upper':upper }
+        value = random( lower=parent_values['lower'], upper=parent_values['upper'] )
+
     dictionary = { 'name':name, 'observed':observed, 'dtype':dtype, 'parents':parents, \
                    'value':value, 'logp':logp, 'random':random }
 
@@ -110,10 +112,10 @@ def Gamma( name, alpha=1, beta=1, value=None, observed=False, dtype=float ):
 
     parents = { 'alpha':alpha, 'beta':beta }
     parent_values = Utils.extract_stochastics_values( parents )
-    alpha_value = parent_values['alpha']
-    beta_value = parent_values['beta']
 
-    def logp( value=value, alpha=alpha_value, beta=beta_value ):
+    def logp( value, parent_values ):
+        alpha_value = parent_values['alpha']
+        beta_value = parent_values['beta']
 
         if np.any( value<=0 ):
             logp_value = -np.inf
@@ -121,26 +123,25 @@ def Gamma( name, alpha=1, beta=1, value=None, observed=False, dtype=float ):
 
             # The Python math routine is faster than numpy for single-valued inputs:
             if np.rank( value )==0:
-                logp_value = -math.lgamma( alpha ) + alpha*math.log( beta ) \
-                             + (alpha-1)*math.log( value ) - beta*value
+                logp_value = -math.lgamma( alpha_value ) + alpha_value*math.log( beta_value ) \
+                             + (alpha_value-1)*math.log( value ) - beta_value*value
 
             # Numpy is much faster for arrays of inputs:
             else:
-                logp_value = np.sum( -math.lgamma( alpha ) + alpha*np.log( beta ) \
-                                     + (alpha-1)*np.log( value ) - beta*value )
+                logp_value = np.sum( -math.lgamma( alpha_value ) + alpha_value*np.log( beta_value ) \
+                                     + (alpha_value-1)*np.log( value ) - beta_value*value )
 
         return float( logp_value )
 
-    def random( alpha=alpha_value, beta=beta_value ):
+    def random( alpha=parent_values['alpha'], beta=parent_values['beta'] ):
         return np.random.gamma( shape=alpha, scale=1./beta )
 
-    if ( alpha_value<=0 )+( beta_value<=0 ):
+    if ( parent_values['alpha']<=0 )+( parent_values['beta']<=0 ):
         err_str = 'alpha and beta parameters must both be >0'
         raise ValueError( err_str )
 
     if value==None:
-        value = random( alpha=alpha_value, beta=beta_value )
-    parents = { 'alpha':alpha, 'beta':beta }
+        value = random( alpha=parent_values['alpha'], beta=parent_values['beta'] )
     dictionary = { 'name':name, 'observed':observed, 'dtype':dtype, 'parents':parents, \
                    'value':value, 'logp':logp, 'random':random }
 

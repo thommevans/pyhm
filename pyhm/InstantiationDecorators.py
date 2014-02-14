@@ -15,13 +15,13 @@ def stochastic( func=None, observed=False, dtype=float ):
       For an unobserved Stoch:
 
         @pyhm.stochastic( observe=False, dtype=float )
-        def A( value=xvalue, par1=par1, par2=par2 ):
+        def A( value=xvalue, params=params ):
 
-            def logp( value, par1=par1, par2=par2 ):
+            def logp( value, params ):
                 ...
                 return logp_value
 
-            def random( par1=par1, par2=par2 ):
+            def random( params ):
                 ...
                 return random_draw
 
@@ -86,8 +86,7 @@ def stochastic( func=None, observed=False, dtype=float ):
         
         # Unpack the value and parents inputs.        
         # Work out the parents of the stochastic, which are
-        # those keyword arguments passed to the function not
-        # including the 'value' argument:
+        # provided in the params input dictionary:
         parents = {}
         ( args, varargs, varkw, defaults ) = inspect.getargspec( func )
         if defaults==None:
@@ -98,18 +97,25 @@ def stochastic( func=None, observed=False, dtype=float ):
             value_included = True
         else:
             value_included = False
+
+        # Check if params have been provided:
+        if ( 'parents' in args ):
+            params_included = True
+        else:
+            params_included = False
             
-        # Check parents have been defined:
-        nparents = len( args ) - value_included
-        arg_deficit = nparents + value_included - len( defaults )
-        if arg_deficit>0:
+        # Raise error if value or 
+        if ( value_included==False )+( params_included==False ):
             err_str = 'Stochastic {0} value and/or parents not defined properly'\
                       .format( dictionary['name'] )
             raise ValueError( err_str )
         else:
-            for i in range( nparents + value_included ):
-                parents[args[i]] = defaults[i]
-        dictionary['value'] = parents.pop( 'value', None )
+            for i in range( len( args ) ):
+                if args[i]=='parents':
+                    for key in defaults[i].keys():
+                        parents[key] = defaults[i][key]
+                elif args[i]=='value':
+                    dictionary['value'] = defaults[i]
         dictionary['parents'] = parents
 
         return ModelObjs.Stoch( dictionary )
@@ -118,5 +124,5 @@ def stochastic( func=None, observed=False, dtype=float ):
         return instantiate_stochastic( func )
     else:
         return instantiate_stochastic
-        
+
     return stochastic_object 
