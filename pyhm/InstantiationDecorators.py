@@ -15,13 +15,13 @@ def stochastic( func=None, observed=False, dtype=float ):
       For an unobserved Stoch:
 
         @pyhm.stochastic( observe=False, dtype=float )
-        def A( value=xvalue, params=params ):
+        def A( value=xvalue, parents=parents ):
 
-            def logp( value, params ):
+            def logp( value, parents ):
                 ...
                 return logp_value
 
-            def random( params ):
+            def random( parents ):
                 ...
                 return random_draw
 
@@ -86,7 +86,7 @@ def stochastic( func=None, observed=False, dtype=float ):
         
         # Unpack the value and parents inputs.        
         # Work out the parents of the stochastic, which are
-        # provided in the params input dictionary:
+        # provided in the parents input dictionary:
         parents = {}
         ( args, varargs, varkw, defaults ) = inspect.getargspec( func )
         if defaults==None:
@@ -98,14 +98,14 @@ def stochastic( func=None, observed=False, dtype=float ):
         else:
             value_included = False
 
-        # Check if params have been provided:
+        # Check if parents have been provided:
         if ( 'parents' in args ):
-            params_included = True
+            parents_included = True
         else:
-            params_included = False
+            parents_included = False
             
         # Raise error if value or 
-        if ( value_included==False )+( params_included==False ):
+        if ( value_included==False )+( parents_included==False ):
             err_str = 'Stochastic {0} value and/or parents not defined properly'\
                       .format( dictionary['name'] )
             raise ValueError( err_str )
