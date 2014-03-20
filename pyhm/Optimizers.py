@@ -47,7 +47,7 @@ def optimize( MAP, method='neldermead', maxiter=1000, ftol=None, verbose=False )
             x0 = np.concatenate( [ x0, value ] )
             stochixs = np.concatenate( [ stochixs, i*np.ones( ndim ) ] )
     x0 = np.array( x0 )
-    stochixs = np.array( stochixs )
+    stochixs = np.array( stochixs, dtype=int )
 
     # Define the negative log likelihood in the format
     # that the scipy optimizers require:

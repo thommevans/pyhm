@@ -124,5 +124,5 @@ def stochastic( func=None, observed=False, dtype=float ):
         return instantiate_stochastic( func )
     else:
         return instantiate_stochastic
-
+    pdb.set_trace()
     return stochastic_object 

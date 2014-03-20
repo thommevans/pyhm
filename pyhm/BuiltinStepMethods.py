@@ -9,6 +9,74 @@ the definition for a basic Metropolis sampler. It would be nice to add in a
 routine for doing nested sampling.
 """
 
+
+class NestedSampling():
+    """
+
+    Want to seed algorithm with N random samples from the prior.
+
+    Now assume we have N samples.
+
+    Put the one with the lowest likelihood aside.
+
+    Randomly select one of the remaining (N-1) samples.
+
+    Use this as starting point for 20 steps of MCMC using Metropolis-Hastings.
+
+    Then discard one with 
+    
+    """
+    
+    def __init__( self, ?kwargs? ):
+        """
+        """
+
+
+    def propose():
+
+    def decide():
+
+        return decision
+
+    def pretune():
+
+
+    def temp():
+        """
+        This is just a placeholding implementation of the ellipsoidal boundary sampling
+        """
+
+        # say X is a NXD array where each row is an observation of a D-dimensional variable
+
+        X = np.random.randn( [ 50, 10 ] ) # NxD
+        rescale = np.tile( 1+np.arange( 10 ), [ 50 , 1 ] )
+        X /= rescale
+        
+        N, D = np.shape( X )
+        mu = np.matrix( np.reshape( np.mean( X, axis=0 ), [ D, 1 ] ) )
+        C = np.matrix( np.cov( X ) )
+
+        w = np.random.randn( d )
+        w /= np.sqrt( np.sum( w**2. ) )
+        u = np.random.random()
+        z = ( u**( 1./d ) )*w
+
+        eigvals, R = np.linalg.eig( C )
+        D = np.matrix( np.diag( eigvals ) )
+
+        # calculate the outer products:
+        L = np.array( np.linalg.cholesky( C ) )
+        k = np.zeros( N )
+        for i in range( N ):
+            r = np.array( X[:,i] ).flatten() - np.array( mu ).flatten()
+            B = scipy.linalg.lu_solve( scipy.linalg.lu_factor( L ), r )
+            k[i] = float( np.matrix( B ).T*np.matrix( B ) )
+
+        f = 1.06
+        T = f*np.sqrt( k.max() )*( R.T*D*R )
+        y = np.array( T*z + mu ) # this is the random sample drawn uniformly from the ellipsoid
+        
+
 class MetropolisHastings():
     """
     Metropolis-Hastings sampling algorithm with Gaussian proposal distributions
