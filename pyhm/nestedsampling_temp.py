@@ -106,7 +106,9 @@ for i in range( nsamples ):
 
     X[i] = ( float( nactive )/float( nactive+1 ) )**( i+1 )
     if i>0:
-        w[i-1] = X[i-1]-X[i]
+        w[i-1] = X[i-1]-X[i] # currently this is not strictly a correct implementation of the trapezoid rule;
+                             # will be a simple adjustment to correct this, including overshoot conditions
+                             # suggested in Sivia & Skilling
         logL_max = logL_chain[:i+1].max()
         logL_chain_normalised = logL_chain[:i+1] - logL_max
         L_chain_normalised = np.exp( logL_chain_normalised )
