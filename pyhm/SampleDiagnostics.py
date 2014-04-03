@@ -311,7 +311,60 @@ def gelman_rubin( chain_list, nburn=0 ):
     return grs
 
 
-def print_chain_properties( sampler, nburn=None, thin=None ):
+def chain_properties( chain, nburn=None, thin=None, print_to_screen=True ):
+
+    freepars = get_freepars( chain )
+    npars = len( freepars )
+
+    parkey = []
+    mean = {}
+    median = {}
+    stdev = {}
+    l34 = {}
+    u34 = {}
+
+    if print_to_screen==True:
+        print '\n{0}\nParameter --> Mean, Stdev:'.format( '#'*50 )
+    for i in range( npars ):
+        parkey += [ str( freepars[i] ) ]
+        chain_i = chain[freepars[i]]
+        if nburn!=None:
+            chain_i = chain_i[nburn:]
+        nsteps = len( chain_i )
+        if thin!=None:
+            ixs = ( np.arange( nsteps )%thin==0 )
+            chain_i = chain_i[ixs]
+        mean[parkey[i]] = np.mean( chain_i )
+        stdev[parkey[i]] = np.std( chain_i )
+        if print_to_screen==True:
+            print '  {0} --> {1}, {2}'.format( freepars[i], mean[parkey[i]], stdev[parkey[i]] )
+
+    if print_to_screen==True:
+        print '\n{0}\nParameter --> Median, -34%, +34%:'.format( '#'*50 )
+    for i in range( npars ):
+        chain_i = chain[freepars[i]]
+        if nburn!=None:
+            chain_i = chain_i[nburn:]
+        nsteps = len( chain_i )
+        if thin!=None:
+            ixs = ( np.arange( nsteps )%thin==0 )
+            chain_i = chain_i[ixs]
+        median[parkey[i]] = np.median( chain_i )
+        deltas = chain_i - median[parkey[i]]
+        ixsl = ( deltas<0 )
+        ixsu = ( deltas>0 )
+        n = len( deltas )
+        n34 = int( np.round( 0.34*n ) )
+        l34[parkey[i]] = deltas[ixsl][np.argsort( deltas[ixsl] )][-n34]
+        u34[parkey[i]] = deltas[ixsu][np.argsort( deltas[ixsu] )][n34]
+        if print_to_screen==True:
+            print '  {0} --> {1}, {2}, {3}'.format( freepars[i], median[parkey[i]], \
+                                                    l34[parkey[i]], u34[parkey[i]] )
+
+    return parkey, mean, median, stdev, l34, u34
+
+
+def print_chain_properties_OLD( sampler, nburn=None, thin=None ):
 
     chain = copy.deepcopy( sampler.chain )
     freepars = get_freepars( chain )
