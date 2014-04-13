@@ -169,7 +169,7 @@ class MetropolisHastings():
             # Proceed to perturb the current parameter only, carrying
             # on until the iteration limit has been reached:
             accfrac_j = 0
-            current_logp = mcmc.logp()
+
             while i<m+1:
 
                 step_size_j = self.step_sizes[key_j]
@@ -194,9 +194,10 @@ class MetropolisHastings():
                     # If this is the first iteration in a new tuning interval,
                     # reset all parameters to their original values to avoid
                     # drifting into low likelihood regions of parameter space:
-                    if k==0:
+                    if k==0:# this is the problem
                         for key in keys:
                             unobs_stochs[key].value = orig_stoch_values[key]
+                        current_logp = mcmc.logp()
 
                     # Take a step in the current parameter while holding the 
                     # rest fixed:
@@ -206,6 +207,7 @@ class MetropolisHastings():
                     # Decide if the step is to be accepted:
                     new_logp = mcmc.logp()
                     tuning_chains[key_j]['accepted'][k] = self.decide( current_logp, new_logp )
+                    
 
                     # Update the value of the associated stochastic object:
                     if ( tuning_chains[key_j]['accepted'][k]==True ):
@@ -267,6 +269,7 @@ class MetropolisHastings():
                         print 'Median value of last {0} steps: median( {1} )={2} '\
                               .format( n, key_j, np.median( current_values[key_j] ) )
                         print 'Starting value for comparison: {0}'.format( orig_stoch_values[key_j] )
+                        print key_j, current_values[key_j]
 
         # Having tuned the relative step sizes, we must now rescale them
         # together to refine the joint step sizes:
