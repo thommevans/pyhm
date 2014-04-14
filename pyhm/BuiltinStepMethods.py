@@ -277,7 +277,6 @@ class MetropolisHastings():
         nsuccess = 0
         rescale_factor = 1.0/np.sqrt( npars )
         tuning_chain = np.zeros( n, dtype=int )
-        current_logp = mcmc.logp()
         if verbose==True:
             print '\n\nNow tuning the step sizes simultaneously...\n'
         while i<m+1:
@@ -304,6 +303,7 @@ class MetropolisHastings():
                 if k==0:
                     for key in keys:
                         unobs_stochs[key].value = orig_stoch_values[key]
+                    current_logp = mcmc.logp()
                     
                 # Take a step in all of the parameters simultaneously:
                 for key in keys:
