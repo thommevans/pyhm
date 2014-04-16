@@ -15,7 +15,8 @@ backends for generating samples from a Model and taking random
 draws from a Model.
 """
 
-def sample( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None, show_progressbar=True, verbose=False ):
+def sample( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None, nconsecutive=4, \
+            show_progressbar=True, verbose=False ):
     """
     Generate samples from the model posterior distribution.
     """
@@ -55,7 +56,7 @@ def sample( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None, show_p
             err_str = 'tune_interval must be set explicitly for pre-tuning'
             raise ValueError( err_str )
         else:
-            step_method.pre_tune( sampler, ntune_iterlim=ntune_iterlim, \
+            step_method.pre_tune( sampler, ntune_iterlim=ntune_iterlim, nconsecutive=nconsecutive, \
                                   tune_interval=tune_interval, verbose=verbose )
     else:
         sampler.ntune_iterlim = None

@@ -122,7 +122,7 @@ class MetropolisHastings():
                 decision = False
         return decision
 
-    def pre_tune( self, mcmc, ntune_iterlim=0, tune_interval=None, verbose=False ):
+    def pre_tune( self, mcmc, ntune_iterlim=0, tune_interval=None, verbose=False, nconsecutive=4 ):
         """
         Adjusts step sizes to give a step acceptance rate of 20-35%.
         """
@@ -159,7 +159,6 @@ class MetropolisHastings():
         # Define variables that track the total number of tuning
         # steps that have been taken and the consecutive number of
         # successful tune_intervals:
-        nconsecutive = 5
         for j in range( npars ):
 
             i = 0 # iteration counter
@@ -269,7 +268,7 @@ class MetropolisHastings():
                         print 'Median value of last {0} steps: median( {1} )={2} '\
                               .format( n, key_j, np.median( current_values[key_j] ) )
                         print 'Starting value for comparison: {0}'.format( orig_stoch_values[key_j] )
-                        print key_j, current_values[key_j]
+                        print 'Current stepsize: {0}'.format( self.step_sizes[key_j] )
 
         # Having tuned the relative step sizes, we must now rescale them
         # together to refine the joint step sizes:

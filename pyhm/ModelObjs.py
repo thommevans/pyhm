@@ -57,13 +57,13 @@ class Sampler():
         """
         Utils.assign_step_method( self, step_method, **kwargs )
 
-    def sample( self, nsteps=1000, ntune_iterlim=None, tune_interval=None, show_progressbar=True, \
-                pickle_chain=None, thin_before_pickling=1, verbose=False ):
+    def sample( self, nsteps=1000, ntune_iterlim=None, tune_interval=None, nconsecutive=4, \
+                show_progressbar=True, pickle_chain=None, thin_before_pickling=1, verbose=False ):
         """
         Sample from the posterior distribution and optionally pickle the output.
         """        
         self.show_progressbar = show_progressbar
-        Utils.sample( self, nsteps=nsteps, ntune_iterlim=ntune_iterlim, \
+        Utils.sample( self, nsteps=nsteps, ntune_iterlim=ntune_iterlim, nconsecutive=nconsecutive, \
                       tune_interval=tune_interval, verbose=verbose )
         if pickle_chain!=None:
             Utils.pickle_chain( self, pickle_chain=pickle_chain, thin_before_pickling=thin_before_pickling )
