@@ -238,7 +238,7 @@ def plot_chain_autocorrs( sampler, nburn=None, maxlag=None, thin_before_plotting
     return None
 
 
-def gelman_rubin( chain_list, nburn=0 ):
+def gelman_rubin( chain_list, nburn=0, thin=1 ):
     """
     Calculates the convergence statistic of Gelman & Rubin (1992).
 
@@ -292,6 +292,7 @@ def gelman_rubin( chain_list, nburn=0 ):
         keys += [ key ]
 
     n = len( chain_list[0][keys[0]] )
+    ixs = ( np.arange( n )%thin==0 )
     npars = len( keys )
     grs = {}
 
@@ -299,7 +300,7 @@ def gelman_rubin( chain_list, nburn=0 ):
     x_bar = np.zeros( m )
     for i in range( npars ):
         for j in range( m ):
-            x_arr = chain_list[j][keys[i]][nburn:]
+            x_arr = chain_list[j][keys[i]][nburn:][ixs]
             x_bar[j] = ( 1./n )*np.sum( x_arr )
             s2[j] = ( 1./( n-1. ) )*np.sum( ( x_arr - x_bar[j] )**2. )
         x_dbar = ( 1./m )*np.sum( x_bar )
