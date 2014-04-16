@@ -292,7 +292,7 @@ def gelman_rubin( chain_list, nburn=0, thin=1 ):
         keys += [ key ]
 
     n = len( chain_list[0][keys[0]] )
-    ixs = ( np.arange( n )%thin==0 )
+    ixs = ( np.arange( n-nburn )%thin==0 )
     npars = len( keys )
     grs = {}
 
