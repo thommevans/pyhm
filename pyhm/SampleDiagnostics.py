@@ -9,12 +9,12 @@ model samples, e.g. plotting the chains directly, plotting the binned chains,
 plotting the chain autocorrelations, computing the Gelman-Rubin statistic.
 """
 
-def plot_running_chain_means( sampler, thin_before_plotting=None ):
+def plot_running_chain_means( chain, thin_before_plotting=None ):
     """
     For each step in the chain, plots the mean of all steps up until
     that point. Plots are made separately for each parameter.
 
-    CALLING
+    CALLING (this needs updating...)
 
       sp = pyhm.Sampler( stochastic_dict )
       sp.sample( nsteps=1000 )
@@ -24,8 +24,8 @@ def plot_running_chain_means( sampler, thin_before_plotting=None ):
     in the model, after thinning the chains by a factor of 5.
     """
 
-    nsteps = sampler.nsteps
-    chain = copy.deepcopy( sampler.chain )
+    chain = copy.deepcopy( chain )
+    nsteps = len( chain['accepted'] )
     freepars = get_freepars( chain )
     npars = len( freepars )
     chainarr = np.zeros( [ nsteps, npars ] )
@@ -55,11 +55,11 @@ def plot_running_chain_means( sampler, thin_before_plotting=None ):
     return None
 
 
-def plot_chain_traces( sampler, nburn=0, show_burn=True, thin_before_plotting=None ):
+def plot_chain_traces( chain, nburn=0, show_burn=True, thin_before_plotting=None ):
     """
     Makes simple plots of the chains for each parameter.
-
-    CALLING
+ 
+    CALLING (this needs updating...)
 
       sp = pyhm.Sampler( stochastic_dict )
       sp.sample( nsteps=1000 )
@@ -72,8 +72,8 @@ def plot_chain_traces( sampler, nburn=0, show_burn=True, thin_before_plotting=No
     colour.
     """
     
-    nsteps = sampler.nsteps
-    chain = copy.deepcopy( sampler.chain )
+    chain = copy.deepcopy( chain )
+    nsteps = len( chain['accepted'] )
     freepars = get_freepars( chain )
     npars = len( freepars )
     stepcount = np.arange( 1, nsteps+1 )
@@ -114,11 +114,11 @@ def plot_chain_traces( sampler, nburn=0, show_burn=True, thin_before_plotting=No
     return None
 
 
-def plot_chain_densities( sampler, nburn=0, nbins=30, show_burn=True, thin_before_plotting=None ):
+def plot_chain_densities( chain, nburn=0, nbins=30, show_burn=True, thin_before_plotting=None ):
     """
     Plots simple histograms for the chain samples of each parameter.
 
-    CALLING
+    CALLING (this needs updating...)
 
       sp = pyhm.Sampler( stochastic_dict )
       sp.sample( nsteps=1000 )
@@ -131,8 +131,8 @@ def plot_chain_densities( sampler, nburn=0, nbins=30, show_burn=True, thin_befor
     will be shown as dashed lines on the same axes.
     """
 
-    nsteps = sampler.nsteps
-    chain = copy.deepcopy( sampler.chain )
+    chain = copy.deepcopy( chain )
+    nsteps = len( chain['accepted'] )
     freepars = get_freepars( chain )
     npars = len( freepars )
     stepcount = np.arange( 1, nsteps+1 )
@@ -172,11 +172,11 @@ def plot_chain_densities( sampler, nburn=0, nbins=30, show_burn=True, thin_befor
     return None
 
 
-def plot_chain_autocorrs( sampler, nburn=None, maxlag=None, thin_before_plotting=None ):
+def plot_chain_autocorrs( chain, nburn=None, maxlag=None, thin_before_plotting=None ):
     """
     Plots the autocorrelations of the chains for each parameter.
 
-    CALLING
+    CALLING (this needs updating...)
 
       sp = pyhm.Sampler( stochastic_dict )
       sp.sample( nsteps=1000 )
@@ -188,14 +188,14 @@ def plot_chain_autocorrs( sampler, nburn=None, maxlag=None, thin_before_plotting
     by a factor of 5.
     """
 
-    nsteps = sampler.nsteps - nburn
+    chain = copy.deepcopy( chain )
+    nsteps = len( chain['accepted'] ) - nburn
     if maxlag==None:
         maxlag = min( [ nsteps, 200 ] )
 
     if nburn==None:
         nburn = 0
 
-    chain = copy.deepcopy( sampler.chain )
     freepars = get_freepars( chain )
     npars = len( freepars )
     stepcount = np.arange( 1, nsteps+1 )
@@ -214,7 +214,9 @@ def plot_chain_autocorrs( sampler, nburn=None, maxlag=None, thin_before_plotting
     nfigs = int( np.ceil( float( npars )/nax_perfig ) )
 
     figcount = 0
+    print '\nComputing autocorrelations:'
     for i in range( npars ):
+        print '... parameter {0} of {1}'.format( i+1, npars )
         subaxn = i%nax_perfig + 1
         if subaxn==1:
             figcount += 1
