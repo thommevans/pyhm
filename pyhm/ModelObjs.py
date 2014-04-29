@@ -154,11 +154,24 @@ class Model():
         Utils.update_attributes( self, stochastics )
         
     def logp( self ):
-        logp = 0.0
+        logp_value = 0.0
         keys = self.stochastics.keys()
-        for key in keys:
-            logp += self.stochastics[key].logp()
-        return logp
+        keys = self.free.keys()
+        # Ensure that the free parameters are valid
+        # according to the defined priors:
+        for key in self.free.keys():
+            logp_i = self.free[key].logp()
+            if np.isfinite( logp_i )==False:
+                logp_value = -np.inf
+                break
+            else:
+                logp_value += logp_i
+        # Finish the logp calculation by evaluating
+        # for the observed variables:
+        if np.isfinite( logp_value )==True:
+            for key in self.fixed.keys():
+                logp_value += self.fixed[key].logp()
+        return logp_value
 
     def draw_from_prior( self ):
         Utils.random_draw_from_Model( self )
