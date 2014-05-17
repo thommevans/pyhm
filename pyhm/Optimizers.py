@@ -95,5 +95,5 @@ def optimize( MAP, method='neldermead', maxiter=1000, ftol=None, verbose=False )
                 free_stochastics[keys[i]].value = float( xopt_i )
             else:
                 free_stochastics[keys[i]].value = np.array( xopt_i )                
-            
+
     return None
