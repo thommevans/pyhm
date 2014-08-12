@@ -15,7 +15,8 @@ maximising/sampling from their posterior distributions. Namely:
 See the documentation for each of these object classes for more information.
 """
 
-class Sampler():
+# NOTE: This used to be 'class Sampler()' ...
+class MCMC():
     """
     Class definition for a Sampler object.
 
@@ -29,27 +30,27 @@ class Sampler():
       logp
 
     DESCRIPTION
-      A Sampler object takes a dictionary of Stochs as input, where the
+      An MCMC object takes a dictionary of Stochs as input, where the
       Stochs comprise a self-consistent hierarchical model,
       i.e. containing at least one observed Stoch that depends upon one
-      or more unobserved Stochs. The primary purpose of the Sampler 
+      or more unobserved Stochs. The primary purpose of the MCMC 
       object is to take random samples from the posterior distribution of the
       hierarchical model. Currently, it is only possible to generate these samples
       using the standard Metropolis-Hastings algorithm. However, the code is 
-      intended to be fully extensible - other sampling algorithms should be added
-      For instance, a high priority is to add a NestedSampling option.
+      intended to be extensible - other sampling algorithms should be added
+      For instance, it may be possible to wrap the affine-invariant package
+      emcee inside this class.
     """
     
     def __init__( self, stochastics ):
         """
-        Initialises a blank sampler object.
+        Initialises a blank MCMC object.
         """
         self.model = Model( stochastics )
         Utils.update_attributes( self, stochastics )
         self.chain = {}
         Utils.assign_step_method( self, BuiltinStepMethods.MetropolisHastings )
         self.show_progressbar = True
-
             
     def assign_step_method( self, step_method, **kwargs ):
         """
@@ -63,8 +64,8 @@ class Sampler():
         Sample from the posterior distribution and optionally pickle the output.
         """        
         self.show_progressbar = show_progressbar
-        Utils.sample( self, nsteps=nsteps, ntune_iterlim=ntune_iterlim, nconsecutive=nconsecutive, \
-                      tune_interval=tune_interval, verbose=verbose )
+        Utils.mcmc_sampling( self, nsteps=nsteps, ntune_iterlim=ntune_iterlim, nconsecutive=nconsecutive, \
+                             tune_interval=tune_interval, verbose=verbose )
         if pickle_chain!=None:
             Utils.pickle_chain( self, pickle_chain=pickle_chain, thin_before_pickling=thin_before_pickling )
 
@@ -81,6 +82,35 @@ class Sampler():
         """
         return self.model.logp()
 
+
+class NestedSampler():
+
+    def __init__( self, stochastics ):
+        """
+        Initialises a blank NestedSampler object.
+        """
+        self.model = Model( stochastics )
+        Utils.update_attributes( self, stochastics )
+
+    def sample( self, n_active=100, stopping_criterion=[ 'Z_convergence', 0.01 ], \
+                pickle_chain=None, thin_before_pickling=1, verbose=False ):
+
+        Utils.nested_sampling( self, n_active, stopping_criterion=stopping_criterion, verbose=verbose )
+        if pickle_chain!=None:
+            Utils.pickle_chain( self, pickle_chain=pickle_chain, thin_before_pickling=thin_before_pickling )
+
+    def draw_from_prior( self ):
+        """
+        Draw a random sample from the model prior.
+        """
+        self.model.draw_from_prior()
+        return None
+
+    def logp( self ):
+        """
+        Evaluate the log likelihood of the model.
+        """
+        return self.model.logp()
 
 class MAP():
     """

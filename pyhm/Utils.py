@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.linalg
 import cPickle
 import pdb, sys, time
 try:
@@ -15,8 +16,105 @@ backends for generating samples from a Model and taking random
 draws from a Model.
 """
 
-def sample( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None, nconsecutive=4, \
-            show_progressbar=True, verbose=False ):
+def initialise_nestedsampler( sampler, n_active ):
+    sampler.active_set = {}
+    sampler.active_set['par_keys'] = sampler.model.free.keys()
+    n_par = len( sampler.active_set['par_keys'] )
+    sampler.active_set['matrix'] = np.zeros( [ n_par, n_active ] )
+    sampler.active_set['logp'] = np.zeros( n_active )
+    for i in range( n_active ):
+        sampler.draw_from_prior()
+        for j in range( n_par ):
+            key = sampler.active_set['par_keys'][j]
+            sampler.active_set['matrix'][j,i] = sampler.model.free[key].value
+        sampler.active_set['logp'][i] = sampler.logp()
+    return None
+
+def nested_sampling( sampler, n_active, stopping_criterion=[ 'Z_convergence', 0.01 ], verbose=False ):
+    initialise_nestedsampler( sampler, n_active )
+    unobs_stochs = sampler.model.free
+    active_pars = sampler.active_set['matrix']
+    active_logp = sampler.active_set['logp']
+    par_keys = sampler.active_set['par_keys']
+    n_par, n_active = np.shape( active_pars )
+    chain = {}
+    chain['logp'] = []
+    for key in unobs_stochs.keys():
+        chain[key] = []
+    chain['X'] = []
+    chain['w'] = []
+    sampler.logZ = -sys.float_info.max
+    i = 0
+    if stopping_criterion[0]=='Z_convergence':
+        fstop = stopping_criterion[1]
+    else:
+        fstop = None
+    terminate = False
+    while terminate==False:
+        ix = np.argmin( active_logp )
+        chain['logp'] += [ active_logp[ix] ]
+        for k in range( n_par ):
+            chain[par_keys[k]] += [ active_pars[k,ix] ]
+        chain['X'] += [ np.exp( -float( i )/float( n_active ) ) ]
+        if i>1:
+            chain['w'] += [ 0.5*( chain['X'][i-2] - chain['X'][i] ) ]
+            delta_logZ = chain['logp'][i-1] + np.log( chain['w'][-1] )
+            sampler.logZ = log_add( sampler.logZ, delta_logZ )
+
+            if stopping_criterion[0]=='Z_convergence':
+                A = active_logp.max()
+                B = np.log( chain['X'][i] )
+                if A + B - sampler.logZ < np.log( fstop ):
+                    terminate = True
+            elif stopping_criterion[0]=='maxiter':
+                if i==maxiter:
+                    terminate = True
+
+        # Record the lowest likelihood of the active set:
+        logp_min = active_logp[ix]
+
+        # Remove the lowest likelihood sample from the active set:
+        #active_pars = np.column_stack( [ active_pars[:,:ix], active_pars[:,ix:] ] )
+
+        mu = np.matrix( np.reshape( np.mean( active_pars, axis=1 ), [ n_par, 1 ] ) )
+        C = np.matrix( np.cov( active_pars ) )
+        eigvals, R = np.linalg.eig( C )
+        M = np.matrix( np.sqrt( np.diag( eigvals ) ) )
+        L = np.array( np.linalg.cholesky( C ) )
+        h = np.zeros( n_active )
+        for k in range( n_active ):
+            r = np.array( active_pars[:,k] ).flatten() - np.array( mu ).flatten()
+            B = scipy.linalg.lu_solve( scipy.linalg.lu_factor( L ), r )
+            B = np.reshape( B, [ n_par, 1 ] )
+            h[k] = float( np.matrix( B ).T*np.matrix( B ) )
+        f = 1.06 # ellipsoid expansion factor
+        T = f*np.sqrt( h.max() )*( R.T*M*R )
+        logp_new = logp_min - 1
+        while logp_new<logp_min:
+            w = np.random.randn( n_par )
+            w /= np.sqrt( np.sum( w**2. ) )
+            u = np.random.random()
+            z = ( u**( 1./float( n_par ) ) )*w
+            z = np.matrix( np.reshape( z, [ n_par, 1 ] ) )
+            par_draw = np.array( T*z + mu ).flatten() # this is the random sample drawn uniformly from the ellipsoid
+            for k in range( n_par ):
+                unobs_stochs[par_keys[k]].value = par_draw[k]
+            logp_new = sampler.logp()
+        active_pars[:,ix] = par_draw
+        active_logp[ix] = logp_new
+        i += 1
+        
+    # Not ideal, but currently just discard the first and last entries:
+    chain['logp'] = chain['logp'][1:-1]
+    chain['X'] = chain['X'][1:-1]
+    sampler.chain = chain
+    sampler.active_set['matrix'] = active_pars
+    sampler.active_set['logp'] = active_logp
+    return None
+
+
+def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None, nconsecutive=4, \
+                   show_progressbar=True, verbose=False ):
     """
     Generate samples from the model posterior distribution.
     """
@@ -430,3 +528,12 @@ def gaussian_random_draw( mu=0.0, sigma=1.0 ):
     """
     
     return np.random.normal( mu, sigma )
+
+def log_add( loga, logc ):
+    """
+    Given log(a) and log(c), returns log(a+c).
+    """
+    if loga>logc:
+        return loga + np.log( 1+np.exp( logc-loga ) )
+    else:
+        return logc + np.log( 1+np.exp( loga-logc ) )
