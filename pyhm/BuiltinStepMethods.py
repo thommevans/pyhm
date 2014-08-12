@@ -10,6 +10,76 @@ routine for doing nested sampling.
 """
 
 
+class NestedSampling():
+
+    def __init__( self, active_set=None ):
+        # active_set = { 'logp':np.array(), 'par1':np.array(), 'par2':np.array(), ... }
+
+    def propose( self, unobs_stochs ):
+        """
+        Generate a random sample from the parameter space by
+        sampling uniformly within the multi-dimensional ellipsoid
+        defined to encompass a region of higher likelihood than
+        that of the rejected sample.
+
+        Note that to get this to work, I'm assuming that there
+        is an attribute of the object called 'active_set' which
+        is a dictionary with the following entries:
+         - 'matrix' = a DxN matrix containing the values for the
+         D parameters for each of the N active set members
+         - 'rows' = a list containing the keys for each parameter
+         that the rows of matrix correspond to
+         - 'logp' = an array containing the logp values for all
+         of the active set members.
+
+         CHECK = SHOULD THE REJECTED SAMPLE HAVE BEEN REMOVED FROM
+         THE ACTIVE SET BEFORE PASSING IN HERE?
+        """
+        
+        keys = unobs_stochs.keys()
+
+        V = self.active_set['matrix']
+        d, n = np.shape( V )
+        mu = np.matrix( np.reshape( np.mean( V, axis=1 ), [ d, 1 ] ) )
+        C = np.matrix( np.cov( V ) )
+        eigvals, R = np.linalg.eig( C )
+        M = np.matrix( np.sqrt( np.diag( eigvals ) ) )
+
+        # calculate the outer products:
+        L = np.array( np.linalg.cholesky( C ) )
+        k = np.zeros( n )
+        for i in range( n ):
+            r = np.array( V[:,i] ).flatten() - np.array( mu ).flatten()
+            B = scipy.linalg.lu_solve( scipy.linalg.lu_factor( L ), r )
+            B = np.reshape( B, [ d, 1 ] )
+            k[i] = float( np.matrix( B ).T*np.matrix( B ) )
+
+        f = 1.06 # ellipsoid expansion factor
+        T = f*np.sqrt( k.max() )*( R.T*M*R )
+
+        w = np.random.randn( d )
+        w /= np.sqrt( np.sum( w**2. ) )
+        u = np.random.random()
+        z = ( u**( 1./d ) )*w
+        z = np.matrix( np.reshape( z, [ d, 1 ] ) )
+        y = np.array( T*z + mu ).flatten() # this is the random sample drawn uniformly from the ellipsoid
+        keys = self.active_set['rows']
+        for i in range( d ):
+            unobs_stochs[keys[i]].value = y[i]
+
+
+    def decide( self, current_logp, new_logp ):
+        """
+        Accept the new sample if the likelihood is higher
+        than that of the rejected sample.
+        """
+        if current_logp<new_logp:
+            decision = True
+        else:
+            decision = False
+        return decision
+        
+
 # TODO IN THE FUTURE:
 ## class NestedSampling():
 ##     """

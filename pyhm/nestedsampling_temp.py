@@ -1,3 +1,4 @@
+from bayes.pyhm_dev import pyhm
 import numpy as np
 import scipy.linalg
 import matplotlib.pyplot as plt
@@ -160,3 +161,25 @@ plt.figure()
 plt.plot( x, y, '.k' )
 plt.plot( x, medians[0]*x + medians[1], '-r' )
 plt.plot( x, bests[0]*x + bests[1], '-b' )
+
+
+###############
+# Now compare with MCMC:
+
+a_var = pyhm.Uniform( 'a', lower=-2.5, upper=2.5 )
+b_var = pyhm.Uniform( 'b', lower=-2.5, upper=2.5 )
+parents = { 'a':a_var, 'b':b_var }
+
+@pyhm.stochastic( observed=True )
+def logL_mcmc( value=y, parents=parents ):
+    def logp( value, parents=parents ):
+        a_val = parents['a']
+        b_val = parents['b']
+        return logL( a_val, b_val )
+model_bundle = { 'logL_mcmc':logL_mcmc, 'a':a_var, 'b':b_var }
+mcmc = pyhm.Sampler( model_bundle )
+mcmc.assign_step_method( pyhm.BuiltinStepMethods.MetropolisHastings )
+mcmc.step_method.step_sizes['a'] = 1e-7
+mcmc.step_method.step_sizes['b'] = 1e-7
+mcmc.sample( nsteps=20000, ntune_iterlim=10000, tune_interval=42, nconsecutive=3, \
+             verbose=1, pickle_chain=None )
