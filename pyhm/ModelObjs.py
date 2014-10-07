@@ -185,7 +185,6 @@ class Model():
         
     def logp( self ):
         logp_value = 0.0
-        keys = self.stochastics.keys()
         keys = self.free.keys()
         # Ensure that the free parameters are valid
         # according to the defined priors:
@@ -198,6 +197,14 @@ class Model():
                 logp_value += logp_i
         # Finish the logp calculation by evaluating
         # for the observed variables:
+        if np.isfinite( logp_value )==True:
+            for key in self.fixed.keys():
+                logp_value += self.fixed[key].logp()
+        return logp_value
+
+    def logp_without_prior( self ):
+        logp_value = 0.0
+        # Evaluate logp for the observed variables:
         if np.isfinite( logp_value )==True:
             for key in self.fixed.keys():
                 logp_value += self.fixed[key].logp()
