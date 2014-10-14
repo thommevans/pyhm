@@ -291,26 +291,24 @@ def gelman_rubin( chain_list, nburn=0, thin=1 ):
     for key in chain_list[0].keys():
         if ( key=='logp' )+( key=='accepted' ):
             continue
-        keys += [ key ]
+        else:
+            keys += [ key ]
 
-    n = len( chain_list[0][keys[0]] )
-    ixs = ( np.arange( n-nburn )%thin==0 )
+    n = len( chain_list[0][keys[0]] ) - nburn
+    ixs = ( np.arange( n )%thin==0 )
     npars = len( keys )
     grs = {}
-
-    s2 = np.zeros( m )
-    x_bar = np.zeros( m )
     for i in range( npars ):
-        for j in range( m ):
-            x_arr = chain_list[j][keys[i]][nburn:][ixs]
-            x_bar[j] = ( 1./n )*np.sum( x_arr )
-            s2[j] = ( 1./( n-1. ) )*np.sum( ( x_arr - x_bar[j] )**2. )
-        x_dbar = ( 1./m )*np.sum( x_bar )
-        W = ( 1./m )*np.sum( s2 )
-        B = ( n/( m-1. ) )*np.sum( ( x_bar - x_dbar )**2. )
-
-        sig2 = ( ( n - 1. )/n )*W + ( B/n )
-        grs[keys[i]] = ( ( m + 1. )/m )*( sig2/W ) - ( ( n -1. )/( m*n ) ) 
+        chains = []
+        for j in range(m):
+            chains += [ chain_list[j][keys[i]][nburn:][ixs] ]
+        chains = np.column_stack(chains)
+        W = np.mean( np.var( chains, axis=0, ddof=1 ) )
+        B_over_n = np.var( np.mean( chains, axis=0 ), ddof=1 )
+        sigma2 = ( ( n-1. )/n )*W + B_over_n
+        Vhat = sigma2 + B_over_n/float( m )
+        grs[keys[i]] = np.sqrt( Vhat/float( W ) )
+                 
     return grs
 
 

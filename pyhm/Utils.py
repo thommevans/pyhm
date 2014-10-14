@@ -128,37 +128,63 @@ def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None,
 
     sampler.nsteps = nsteps
 
-    # Initialise the chain:
-    sampler.chain = {}
-    sampler.chain['logp'] = np.zeros( nsteps, dtype=float )
-    sampler.chain['accepted'] = np.zeros( nsteps, dtype=int )
-    unobs_stochs = sampler.model.free
-    unobs_stochs_keys = unobs_stochs.keys()
-    for key in unobs_stochs_keys:
-        dtype = unobs_stochs[key].dtype
-        sampler.chain[key] = np.zeros( nsteps, dtype=dtype )
+    if sampler._chain_exists==False:
+        # If a chain doesn't already exist (i.e. this is a new chain), then
+        # initialise with pre-tuning etc:
+        sampler.chain = {}
+        sampler.chain['logp'] = np.zeros( nsteps, dtype=float )
+        sampler.chain['accepted'] = np.zeros( nsteps, dtype=int )
+        unobs_stochs = sampler.model.free
+        unobs_stochs_keys = unobs_stochs.keys()
+        for key in unobs_stochs_keys:
+            dtype = unobs_stochs[key].dtype
+            sampler.chain[key] = np.zeros( nsteps, dtype=dtype )
 
-    # Install the current unobserved stochastic values
-    # as the first step in the chain:
-    current_values = {}
-    for key in unobs_stochs_keys:
-        current_values[key] = unobs_stochs[key].value
-    current_logp = sampler.logp()
-    
-    # Determine if there will be tuning:
-    if ( ntune_iterlim!=None )*( tune_interval!=None ):
-        if hasattr( step_method, 'pre_tune' )==False:
-            err_str = '\nStepMethod must have pre_tune() method assigned'
-            raise ValueError( err_str )
-        elif tune_interval==None:
-            err_str = 'tune_interval must be set explicitly for pre-tuning'
-            raise ValueError( err_str )
+        # Install the current unobserved stochastic values
+        # as the first step in the chain:
+        current_values = {}
+        for key in unobs_stochs_keys:
+            current_values[key] = unobs_stochs[key].value
+        current_logp = sampler.logp()
+
+        # Determine if there will be tuning:
+        if ( ntune_iterlim!=None )*( tune_interval!=None ):
+            if hasattr( step_method, 'pre_tune' )==False:
+                err_str = '\nStepMethod must have pre_tune() method assigned'
+                raise ValueError( err_str )
+            elif tune_interval==None:
+                err_str = 'tune_interval must be set explicitly for pre-tuning'
+                raise ValueError( err_str )
+            else:
+                step_method.pre_tune( sampler, ntune_iterlim=ntune_iterlim, nconsecutive=nconsecutive, \
+                                      tune_interval=tune_interval, verbose=verbose )
         else:
-            step_method.pre_tune( sampler, ntune_iterlim=ntune_iterlim, nconsecutive=nconsecutive, \
-                                  tune_interval=tune_interval, verbose=verbose )
+            sampler.ntune_iterlim = None
+            sampler.tune_interval = None
+        pre_steps = 0 # i.e. this is a new chain
     else:
-        sampler.ntune_iterlim = None
-        sampler.tune_interval = None
+        # If a chain already exists, check how long it is:
+        pre_steps = len( sampler.chain['logp'] )
+        # Now extend the chain to accommodate the new steps
+        # that will be taken:
+        updated_chain = {}
+        updated_chain['logp'] = np.zeros( pre_steps+nsteps, dtype=float )
+        updated_chain['logp'][:pre_steps] = sampler.chain['logp']
+        updated_chain['accepted'] = np.zeros( pre_steps+nsteps, dtype=int )
+        updated_chain['accepted'][:pre_steps] = sampler.chain['accepted']
+        unobs_stochs = sampler.model.free
+        unobs_stochs_keys = unobs_stochs.keys()
+        for key in unobs_stochs_keys:
+            dtype = unobs_stochs[key].dtype
+            updated_chain[key] = np.zeros( pre_steps+nsteps, dtype=dtype )
+            updated_chain[key][:pre_steps] = sampler.chain[key]
+        sampler.chain = updated_chain
+        # Ensure that the parameter values continue on from existing chains:
+        current_values = {}
+        for key in unobs_stochs_keys:
+            unobs_stochs[key].value = sampler.chain[key][pre_steps-1]
+            current_values[key] = unobs_stochs[key].value
+        current_logp = sampler.logp()
 
     # Proceed with the sampling:
     if ( sampler.show_progressbar==True )*\
@@ -170,8 +196,8 @@ def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None,
             pbar.animate( i+1 )
         step_method.propose( unobs_stochs )
         new_logp = sampler.logp()
-        sampler.chain['accepted'][i] = step_method.decide( current_logp, new_logp )
-        if sampler.chain['accepted'][i]==True:
+        sampler.chain['accepted'][pre_steps+i] = step_method.decide( current_logp, new_logp )
+        if sampler.chain['accepted'][pre_steps+i]==True:
             current_logp = new_logp
             for key in unobs_stochs_keys:
                 current_values[key] = unobs_stochs[key].value
@@ -179,12 +205,13 @@ def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None,
             for key in unobs_stochs_keys:
                 unobs_stochs[key].value = current_values[key]
         for key in unobs_stochs_keys:
-            sampler.chain[key][i] = unobs_stochs[key].value
-        sampler.chain['logp'][i] = current_logp
+            sampler.chain[key][pre_steps+i] = unobs_stochs[key].value
+        sampler.chain['logp'][pre_steps+i] = current_logp
     if ( sampler.show_progressbar==True )*\
        ( progressbar_imported==True ):
         pbar.animate( nsteps )
-        
+    
+    sampler._chain_exists = True
     return None
 
 

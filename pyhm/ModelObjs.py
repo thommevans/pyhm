@@ -49,6 +49,7 @@ class MCMC():
         self.model = Model( stochastics )
         Utils.update_attributes( self, stochastics )
         self.chain = {}
+        self._chain_exists = False
         Utils.assign_step_method( self, BuiltinStepMethods.MetropolisHastings )
         self.show_progressbar = True
             

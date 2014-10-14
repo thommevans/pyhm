@@ -128,7 +128,6 @@ class MetropolisHastings():
                         for key in keys:
                             unobs_stochs[key].value = orig_stoch_values[key]
                         current_logp = mcmc.logp()
-                        print 'arrgh', orig_stoch_values[key], unobs_stochs[key].value
 
                     # Take a step in the current parameter while holding the 
                     # rest fixed:
