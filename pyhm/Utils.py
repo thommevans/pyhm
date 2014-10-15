@@ -126,6 +126,18 @@ def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None,
     else:
         step_method = sampler.step_method
 
+    # Before starting to sample, ensure that the free parameter
+    # values are within the prior ranges of finite probability:
+    unobs_stochs = sampler.model.free
+    unobs_stochs_keys = unobs_stochs.keys()
+    for key in unobs_stochs_keys:
+        if np.isfinite( unobs_stochs[key].logp() )==False:
+            err_str = 'Initial value for {0} outside prior range'.format( key )
+            raise StandardError( err_str )
+    if np.isfinite( sampler.logp() ):
+        err_str = 'Model likelihood is not finite - abandoning'.format( key )
+        raise StandardError( err_str )
+
     sampler.nsteps = nsteps
 
     if sampler._chain_exists==False:
@@ -134,8 +146,6 @@ def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None,
         sampler.chain = {}
         sampler.chain['logp'] = np.zeros( nsteps, dtype=float )
         sampler.chain['accepted'] = np.zeros( nsteps, dtype=int )
-        unobs_stochs = sampler.model.free
-        unobs_stochs_keys = unobs_stochs.keys()
         for key in unobs_stochs_keys:
             dtype = unobs_stochs[key].dtype
             sampler.chain[key] = np.zeros( nsteps, dtype=dtype )
@@ -172,8 +182,6 @@ def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None,
         updated_chain['logp'][:pre_steps] = sampler.chain['logp']
         updated_chain['accepted'] = np.zeros( pre_steps+nsteps, dtype=int )
         updated_chain['accepted'][:pre_steps] = sampler.chain['accepted']
-        unobs_stochs = sampler.model.free
-        unobs_stochs_keys = unobs_stochs.keys()
         for key in unobs_stochs_keys:
             dtype = unobs_stochs[key].dtype
             updated_chain[key] = np.zeros( pre_steps+nsteps, dtype=dtype )
@@ -210,7 +218,10 @@ def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None,
     if ( sampler.show_progressbar==True )*\
        ( progressbar_imported==True ):
         pbar.animate( nsteps )
-    
+        
+    # DELETE: testing...
+    if np.max(np.abs(np.diff(sampler.chain['logp'])))==0:
+        pdb.set_trace() # weird... no steps accepted ???
     sampler._chain_exists = True
     return None
 
