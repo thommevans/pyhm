@@ -268,9 +268,9 @@ class MetropolisHastings():
                     else:
                         nsuccess = 0
                         if ( accfrac<=0.01 ):
-                            rescale_factor = 1./2.0
+                            rescale_factor = 1./1.6
                         elif ( accfrac>0.01 )*( accfrac<=0.05 ):
-                            rescale_factor = 1./1.5
+                            rescale_factor = 1./1.4
                         elif ( accfrac>0.05 )*( accfrac<=0.10 ):
                             rescale_factor = 1./1.2
                         elif ( accfrac>0.10 )*( accfrac<=0.15 ):
@@ -284,9 +284,9 @@ class MetropolisHastings():
                         elif ( accfrac>0.50 )*( accfrac<=0.55 ):
                             rescale_factor = 1.2
                         elif ( accfrac>0.55 )*( accfrac<=0.60 ):
-                            rescale_factor = 1.5
+                            rescale_factor = 1.4
                         elif ( accfrac>0.60 ):
-                            rescale_factor = 2.
+                            rescale_factor = 1.6
 
                     if verbose==True:
                         print 'Consecutive successes = {0}'.format( nsuccess )
@@ -295,4 +295,6 @@ class MetropolisHastings():
 
         print 'Finished tuning with acceptance rate of {0:.1f}%'.format( accfrac*100 )
 
+        for key in keys:
+            unobs_stochs[key].value = orig_stoch_values[key]
         return None

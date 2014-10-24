@@ -134,7 +134,7 @@ def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None,
         if np.isfinite( unobs_stochs[key].logp() )==False:
             err_str = 'Initial value for {0} outside prior range'.format( key )
             raise StandardError( err_str )
-    if np.isfinite( sampler.logp() ):
+    if np.isfinite( sampler.logp() )==False:
         err_str = 'Model likelihood is not finite - abandoning'.format( key )
         raise StandardError( err_str )
 
