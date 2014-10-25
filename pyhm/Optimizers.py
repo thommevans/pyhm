@@ -2,6 +2,11 @@ import numpy as np
 import scipy.optimize
 import Utils
 import sys, pdb, warnings
+try:
+    import numdifftools as nd
+    nd_installed = True
+except:
+    nd_installed = False
 
 """
 This module defines the optimization algorithms for MAP objects.
@@ -96,4 +101,40 @@ def optimize( MAP, method='neldermead', maxiter=1000, ftol=None, verbose=False )
             else:
                 free_stochastics[keys[i]].value = np.array( xopt_i )                
 
+    MAP.logp_hess = -hessian( func, xopt )
+    try:
+        MAP.pcov = np.linalg.inv( -MAP.logp_hess )
+    except:
+        MAP.pcov = np.inf
+
     return None
+
+
+def hessian ( f, x0, epsilon=1.e-5, linear_approx=False ):
+    """
+    A numerical approximation to the Hessian matrix of cost function at
+    location x0 (hopefully, the minimum). THIS NEEDS TO BE CHECKED!!!!
+    """
+    # ``calculate_cost_function`` is the cost function implementation
+    # The next line calculates an approximation to the first
+    # derivative
+    f1 = scipy.optimize.approx_fprime( x0, f, epsilon )
+
+    # This is a linear approximation. Obviously much more efficient
+    # if cost function is linear
+    if linear_approx:
+        f1 = np.matrix(f1)
+        return f1.transpose() * f1
+    # Allocate space for the hessian
+    n = x0.shape[0]
+    hessian = np.zeros ( ( n, n ) )
+    # The next loop fill in the matrix
+    xx = x0
+    for j in xrange( n ):
+        xx0 = xx[j] # Store old value
+        xx[j] = xx0 + epsilon # Perturb with finite difference
+        # Recalculate the partial derivatives for this new point
+        f2 = scipy.optimize.approx_fprime( x0, f, epsilon )
+        hessian[:, j] = (f2 - f1)/epsilon # scale...
+        xx[j] = xx0 # Restore initial value of x0
+    return hessian
