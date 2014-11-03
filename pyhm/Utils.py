@@ -140,7 +140,7 @@ def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None,
 
     sampler.nsteps = nsteps
 
-    if ( sampler._chain_exists==False )+( sampler.new_chain==True ):
+    if ( sampler._chain_exists==False )+( sampler._overwrite_existing_chains==True ):
         # If a chain doesn't already exist (i.e. this is a new chain), then
         # initialise with pre-tuning etc:
         sampler.chain = {}

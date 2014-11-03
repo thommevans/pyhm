@@ -42,7 +42,7 @@ class MCMC():
       emcee inside this class.
     """
     
-    def __init__( self, stochastics, new_chain=True ):
+    def __init__( self, stochastics, overwrite_existing_chains=False ):
         """
         Initialises a blank MCMC object.
         """
@@ -50,7 +50,7 @@ class MCMC():
         Utils.update_attributes( self, stochastics )
         self.chain = {}
         self._chain_exists = False
-        self.new_chain = new_chain
+        self._overwrite_existing_chains = overwrite_existing_chains
         Utils.assign_step_method( self, BuiltinStepMethods.MetropolisHastings )
         self.show_progressbar = True
             

@@ -102,15 +102,25 @@ def optimize( MAP, method='neldermead', maxiter=1000, ftol=None, verbose=False )
                 free_stochastics[keys[i]].value = np.array( xopt_i )                
 
     MAP.logp_hess = -hessian( func, xopt )
+    #xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
+    #ydata = 1+2*np.exp(0.75*xdata)
+    #fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
+    #xx=np.array([1,2,0.75])
+    #AA=hessian(fun,xx)
+    #aa=AA(xx)
+    #BB=nd.Jacobian(fun)
+    #bb=BB(xx)
+    #print aa-bb
+    #print 'aaaaaa'
+    #pdb.set_trace()
     try:
         MAP.pcov = np.linalg.inv( -MAP.logp_hess )
     except:
         MAP.pcov = np.inf
-
     return None
 
 
-def hessian ( f, x0, epsilon=1.e-5, linear_approx=False ):
+def hessian ( f, x0, epsilon=1.e-8, linear_approx=False ):
     """
     A numerical approximation to the Hessian matrix of cost function at
     location x0 (hopefully, the minimum). THIS NEEDS TO BE CHECKED!!!!
