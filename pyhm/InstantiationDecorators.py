@@ -6,7 +6,7 @@ This module contains definitions for function decorators that are used
 to instantiate instances of objects such as Stochs.
 """
 
-def stochastic( func=None, observed=False, dtype=float ):
+def stochastic( label=None, func=None, observed=False, dtype=float ):
     """
     Decorator for the Stoch class.
 
@@ -50,12 +50,15 @@ def stochastic( func=None, observed=False, dtype=float ):
       observed Stoch is fixed to its 'observed' value.
     """
 
-    def instantiate_stochastic( func ):
+    def instantiate_stochastic( func, label=label ):
 
         dictionary = {}
 
         # Extract the basic properties:
-        dictionary['name'] = func.__name__
+        if label!=None:
+            dictionary['name'] = label
+        else:
+            dictionary['name'] = func.__name__
         dictionary['observed'] = observed
         dictionary['dtype'] = dtype
 
@@ -124,5 +127,5 @@ def stochastic( func=None, observed=False, dtype=float ):
         return instantiate_stochastic( func )
     else:
         return instantiate_stochastic
-    pdb.set_trace()
+    #pdb.set_trace()
     return stochastic_object 
