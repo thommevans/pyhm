@@ -107,7 +107,7 @@ def stochastic( label=None, func=None, observed=False, dtype=float ):
         else:
             parents_included = False
             
-        # Raise error if value or 
+        # Raise error if value or parents haven't been provided:
         if ( value_included==False )+( parents_included==False ):
             err_str = 'Stochastic {0} value and/or parents not defined properly'\
                       .format( dictionary['name'] )
