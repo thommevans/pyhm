@@ -16,13 +16,12 @@ def Gaussian( name, mu=0.0, sigma=1.0, value=None, observed=False, dtype=float )
 
     CALLING
 
-      y = pyhm.Gaussian( 'y', mu=0, sig=1, value=3.4, observed=False, dtype=float )
+      y = pyhm.Gaussian( 'y', parents={ 'mu':0, 'sig':1 }, value=3.4, observed=False, dtype=float )
 
     The above would generate an unobserved Stoch that has a Gaussian probability
     distribution with a mean of 0, a standard deviation of 1, and a current value of 3.4.
     """
-
-    parents = { 'mu':mu, 'sigma':sigma }
+    parents = { 'mu':mu, 'sigma':sigma } 
     parent_values = Utils.extract_stochastics_values( parents )
     
     def logp( value, parent_values ):
@@ -36,11 +35,13 @@ def Gaussian( name, mu=0.0, sigma=1.0, value=None, observed=False, dtype=float )
                            - ( ( value - mu_value )**2. )/( 2*( sigma_value**2. ) ) )
         return logp
         
-    def random( mu=parent_values['mu'], sigma=parent_values['sigma'] ):
+    def random( parent_values ):
+        mu = parent_values['mu']
+        sigma = parent_values['sigma']        
         return np.random.normal( mu, sigma )
 
     if value==None:
-        value = random( mu=parent_values['mu'], sigma=parent_values['sigma'] )
+        value = random( parent_values )
 
     dictionary = { 'name':name, 'observed':observed, 'dtype':dtype, 'parents':parents, \
                    'value':value, 'logp':logp, 'random':random }
@@ -62,8 +63,6 @@ def Uniform( name, lower=0.0, upper=1.0, value=None, observed=False, dtype=float
 
     parents = { 'lower':lower, 'upper':upper }
     parent_values = Utils.extract_stochastics_values( parents )
-    #lower_value = parent_values['lower']
-    #upper_value = parent_values['upper']
 
     if ( value!=None )*( np.rank( value )>0 ):
         n = len( value.flatten() )
@@ -79,14 +78,16 @@ def Uniform( name, lower=0.0, upper=1.0, value=None, observed=False, dtype=float
             logp = -np.inf
         return logp
 
-    def random( lower=parent_values['lower'], upper=parent_values['upper'] ):
+    def random( parent_values ):
+        lower = parent_values['lower']
+        upper = parent_values['upper']        
         if n>1:
             return np.random.uniform( low=lower, high=upper, size=n )
         else:
             return np.random.uniform( low=lower, high=upper )
 
     if value==None:
-        value = random( lower=parent_values['lower'], upper=parent_values['upper'] )
+        value = random( parent_values )
 
     dictionary = { 'name':name, 'observed':observed, 'dtype':dtype, 'parents':parents, \
                    'value':value, 'logp':logp, 'random':random }
@@ -133,7 +134,9 @@ def Gamma( name, alpha=1, beta=1, value=None, observed=False, dtype=float ):
 
         return float( logp_value )
 
-    def random( alpha=parent_values['alpha'], beta=parent_values['beta'] ):
+    def random( parent_values ):
+        alpha = parent_values['alpha']
+        beta = parent_values['beta']
         return np.random.gamma( shape=alpha, scale=1./beta )
 
     if ( parent_values['alpha']<=0 )+( parent_values['beta']<=0 ):
@@ -141,7 +144,7 @@ def Gamma( name, alpha=1, beta=1, value=None, observed=False, dtype=float ):
         raise ValueError( err_str )
 
     if value==None:
-        value = random( alpha=parent_values['alpha'], beta=parent_values['beta'] )
+        value = random( parent_values )
     dictionary = { 'name':name, 'observed':observed, 'dtype':dtype, 'parents':parents, \
                    'value':value, 'logp':logp, 'random':random }
 

@@ -312,8 +312,10 @@ class Stoch():
         if random_func==None:
             random_draw = Utils.blank_random
         else:
-            kwargs = Utils.extract_stochastics_values( self.parents )
-            random_draw = random_func( **kwargs )
+            #kwargs = Utils.extract_stochastics_values( self.parents )
+            #random_draw = random_func( **kwargs )
+            parent_vals = Utils.extract_stochastics_values( self.parents )
+            random_draw = random_func( parent_vals )
         self.value = random_draw
         return random_draw
 
