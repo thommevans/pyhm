@@ -12,14 +12,14 @@ except:
 This module defines the optimization algorithms for MAP objects.
 """
 
-def optimize( MAP, method='neldermead', maxiter=1000, ftol=None, verbose=False ):
+def optimize( MAP, method='neldermead', maxiter=1000, maxfun=200000, ftol=None, verbose=False ):
     """
     Wrapper for the scipy optimizers.
 
     CALLING
 
       mp = pyhm.MAP( stochastic_dict )
-      mp.fit( method='neldermead', maxiter=1000, ftol=0.0001, verbose=False )
+      mp.fit( method='neldermead', maxiter=1000, maxfun=200000, ftol=0.0001, verbose=False )
 
     DESCRIPTION
       This routine takes pyhm MAP objects and prepares them so that the negative
@@ -76,7 +76,8 @@ def optimize( MAP, method='neldermead', maxiter=1000, ftol=None, verbose=False )
     if method=='neldermead':
         if ftol==None:
             ftol = 0.01
-        xopt = scipy.optimize.fmin( func, x0, ftol=ftol, maxiter=maxiter, full_output=0, disp=verbose )
+        xopt = scipy.optimize.fmin( func, x0, ftol=ftol, maxiter=maxiter, maxfun=maxfun, \
+                                    full_output=0, disp=verbose )
     elif method=='powell':
         if ftol==None:
             ftol = 0.01
