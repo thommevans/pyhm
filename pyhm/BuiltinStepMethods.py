@@ -262,7 +262,7 @@ class MetropolisHastings():
                 if k==n-1:
                     naccepted = np.sum( tuning_chain )
                     accfrac = naccepted/float( n )
-                    if ( accfrac>=0.2 )*( accfrac<=0.35 ):
+                    if ( accfrac>=0.2 )*( accfrac<=0.4 ):
                         nsuccess += 1
                         rescale_factor = 1.0
                     else:
