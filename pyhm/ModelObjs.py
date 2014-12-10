@@ -54,11 +54,12 @@ class MCMC():
         Utils.assign_step_method( self, BuiltinStepMethods.MetropolisHastings )
         self.show_progressbar = True
             
-    def assign_step_method( self, step_method, **kwargs ):
+    def assign_step_method( self, step_method ):#, **kwargs ):
         """
         Assigns the specified step method to the Sampler object.
         """
-        Utils.assign_step_method( self, step_method, **kwargs )
+        Utils.assign_step_method( self, step_method )#, **kwargs )
+
 
     def sample( self, nsteps=1000, ntune_iterlim=None, tune_interval=None, nconsecutive=4, \
                 show_progressbar=True, pickle_chain=None, thin_before_pickling=1, verbose=False, \

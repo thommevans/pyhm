@@ -118,7 +118,7 @@ def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None,
     """
     Generate samples from the model posterior distribution.
     """
-    
+
     # Check that a StepMethod has been assigned:
     if sampler.step_method==None:
         err_str = 'Step method must be assigned before sampling can begin'
@@ -219,9 +219,6 @@ def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None,
        ( progressbar_imported==True ):
         pbar.animate( nsteps )
         
-    # DELETE: testing...
-    if np.max(np.abs(np.diff(sampler.chain['logp'])))==0:
-        pdb.set_trace() # weird... no steps accepted ???
     sampler._chain_exists = True
     return None
 
@@ -302,18 +299,23 @@ def update_attributes( object, dictionary ):
     return None
 
 
-def assign_step_method( mcmc, step_method, **kwargs ):
+def assign_proposal_distribution( step_method, proposal_distribution ):
+    step_method.proposal_distribution = proposal_distribution()
+    return None
+
+def assign_step_method( mcmc, step_method ):
     """
     Assigns a step method to a Sampler object.
     """
     
-    mcmc.step_method = step_method( **kwargs )
+    mcmc.step_method = step_method()#( **kwargs )
     if hasattr( mcmc.step_method, 'pre_tune' )==True:
-        def mcmc_pretune( ntune_iterlim=0, tune_interval=None, **kwargs_pre_tune ):
+        def mcmc_pre_tune( ntune_iterlim=0, tune_interval=None, **kwargs_pre_tune ):
             mcmc.step_method.pre_tune( mcmc, ntune_iterlim=ntune_iterlim, \
                                        tune_interval=tune_interval, **kwargs_pre_tune )
             return None
-        mcmc.pre_tune = mcmc_pretune
+        mcmc.pre_tune = mcmc_pre_tune
+    #update_attributes( mcmc.step_method, **kwargs )    
 
     return None
 
@@ -564,8 +566,8 @@ def gaussian_random_draw( mu=0.0, sigma=1.0 ):
     Draw a random sample from a 1D Gaussian distribution
     that has mean mu and standard deviation sigma.
     """
-    
     return np.random.normal( mu, sigma )
+
 
 def log_add( loga, logc ):
     """
