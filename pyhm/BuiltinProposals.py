@@ -314,6 +314,9 @@ class mv_gaussian():
             covmatrix[i,i] = step_sizes_tuned[keys[i]]**2.
         mcmc.step_method.proposal_kwargs = { 'covmatrix':covmatrix, 'covcols':covcols }
         mcmc._overwrite_existing_chains = True
+        # todo = possibly iterate this step a few times to hopefully
+        # increase the chance that the covariance matrix is a reasonable
+        # approximation to the posterior distribution
         Utils.mcmc_sampling( mcmc, nsteps=ncov_sample, verbose=verbose )
         chains = []
         for key in keys:
