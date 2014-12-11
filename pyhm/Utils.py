@@ -113,8 +113,7 @@ def nested_sampling( sampler, n_active, stopping_criterion=[ 'Z_convergence', 0.
     return None
 
 
-def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None, nconsecutive=4, \
-                   show_progressbar=True, verbose=False ):
+def mcmc_sampling( sampler, nsteps=1000, show_progressbar=True, verbose=False ):
     """
     Generate samples from the model posterior distribution.
     """
@@ -139,7 +138,6 @@ def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None,
         raise StandardError( err_str )
 
     sampler.nsteps = nsteps
-
     if ( sampler._chain_exists==False )+( sampler._overwrite_existing_chains==True ):
         # If a chain doesn't already exist (i.e. this is a new chain), then
         # initialise with pre-tuning etc:
@@ -157,20 +155,6 @@ def mcmc_sampling( sampler, nsteps=1000, ntune_iterlim=None, tune_interval=None,
             current_values[key] = unobs_stochs[key].value
         current_logp = sampler.logp()
 
-        # Determine if there will be tuning:
-        if ( ntune_iterlim!=None )*( tune_interval!=None ):
-            if hasattr( step_method, 'pre_tune' )==False:
-                err_str = '\nStepMethod must have pre_tune() method assigned'
-                raise ValueError( err_str )
-            elif tune_interval==None:
-                err_str = 'tune_interval must be set explicitly for pre-tuning'
-                raise ValueError( err_str )
-            else:
-                step_method.pre_tune( sampler, ntune_iterlim=ntune_iterlim, nconsecutive=nconsecutive, \
-                                      tune_interval=tune_interval, verbose=verbose )
-        else:
-            sampler.ntune_iterlim = None
-            sampler.tune_interval = None
         pre_steps = 0 # i.e. this is a new chain
     else:
         # If a chain already exists, check how long it is:

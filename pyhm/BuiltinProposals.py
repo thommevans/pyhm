@@ -25,15 +25,22 @@ class diagonal_gaussian():
             stochs[key].value += Utils.gaussian_random_draw( mu=0.0, sigma=kwargs['step_sizes'][key] )
         
     def pre_tune( self, mcmc, ntune_iterlim=0, tune_interval=None, verbose=False, nconsecutive=4 ):
-        unobs_stochs = mcmc.model.free
-        m = ntune_iterlim
-        n = tune_interval
-        keys = unobs_stochs.keys()
+        keys = mcmc.model.free.keys()
         if mcmc.step_method.proposal_kwargs['step_sizes']==None:
             mcmc.step_method.proposal_kwargs['step_sizes'] = {}
             for key in keys:
                 mcmc.step_method.proposal_kwargs['step_sizes'][key] = 1.
-        step_sizes = mcmc.step_method.proposal_kwargs['step_sizes']
+        untuned_step_sizes = mcmc.step_method.proposal_kwargs['step_sizes']
+        tuned_step_sizes = tune_diagonal_gaussian_step_sizes( mcmc, untuned_step_sizes, ntune_iterlim=ntune_iterlim, \
+                                                              tune_interval=tune_interval, \
+                                                              verbose=verbose, nconsecutive=nconsecutive )
+        mcmc.step_method.proposal_kwargs['step_sizes'] = tuned_step_sizes
+
+def tune_diagonal_gaussian_step_sizes( mcmc, step_sizes, ntune_iterlim=0, tune_interval=None, verbose=False, nconsecutive=4 ):
+        unobs_stochs = mcmc.model.free
+        keys = unobs_stochs.keys()
+        m = ntune_iterlim
+        n = tune_interval
         npars = len( keys )
 
         # Make a record of the starting values for each parameter:
@@ -208,7 +215,8 @@ class diagonal_gaussian():
                     # taking the step:
                     if k==0:
                         step_sizes[key] *= rescale_factor
-                self.step( unobs_stochs, **mcmc.step_method.proposal_kwargs )
+                    unobs_stochs[key].value += Utils.gaussian_random_draw( mu=0.0, sigma=step_sizes[key] )
+                #self.step( unobs_stochs, **mcmc.step_method.proposal_kwargs )
 
                 # Decide if the step is to be accepted:
                 new_logp = mcmc.logp()
@@ -262,7 +270,7 @@ class diagonal_gaussian():
 
         for key in keys:
             unobs_stochs[key].value = orig_stoch_values[key]
-        return None
+        return step_sizes
         
 
 
@@ -278,13 +286,37 @@ class mv_gaussian():
         self.covmatrix = covmatrix
         self.covcols = covcols
 
-    def step( self, stochs ):
+    def step( self, stochs, **kwargs ):
         keys = stochs.keys()
         npar = len( keys )
         meanvec = np.zeros( npar )
-        draw = np.random.multivariate_normal( meanvec, self.covmatrix )
-        steps = np.diag( draw )
+        steps = np.random.multivariate_normal( meanvec, kwargs['covmatrix'] )
         for i in range( npar ):
-            key = self.covcols[i]
+            key = kwargs['covcols'][i]
             stochs[key].value += steps[i]
 
+    def pre_tune( self, mcmc, ntune_iterlim=0, tune_interval=None, verbose=False, nconsecutive=4, \
+                  ncov_sample=0, step_sizes_init=None ):
+        keys = mcmc.model.free.keys()
+        npar = len( keys )
+        if step_sizes_init==None:
+            step_sizes_init = {}
+            for key in keys:
+                step_sizes_init[key] = 1
+        step_sizes_tuned = tune_diagonal_gaussian_step_sizes( mcmc, step_sizes_init, ntune_iterlim=ntune_iterlim, \
+                                                              tune_interval=tune_interval, \
+                                                              verbose=verbose, nconsecutive=nconsecutive )
+        npar = len( keys )
+        covmatrix = np.zeros( [ npar, npar ] )
+        covcols = []
+        for i in range( npar ):
+            covcols += [ keys[i] ]
+            covmatrix[i,i] = step_sizes_tuned[keys[i]]**2.
+        mcmc.step_method.proposal_kwargs = { 'covmatrix':covmatrix, 'covcols':covcols }
+        mcmc._overwrite_existing_chains = True
+        Utils.mcmc_sampling( mcmc, nsteps=ncov_sample, verbose=verbose )
+        chains = []
+        for key in keys:
+            chains += [ mcmc.chain[key] ]
+        chains = np.row_stack( chains )
+        mcmc.step_method.proposal_kwargs['covmatrix'] = np.cov( chains )

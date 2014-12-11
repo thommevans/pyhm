@@ -60,17 +60,17 @@ class MCMC():
         """
         Utils.assign_step_method( self, step_method )#, **kwargs )
 
-
-    def sample( self, nsteps=1000, ntune_iterlim=None, tune_interval=None, nconsecutive=4, \
-                show_progressbar=True, pickle_chain=None, thin_before_pickling=1, verbose=False, \
-                overwrite_existing_chains=False ):
+    def pre_tune( self, **kwargs ):
+        self.step_method.pre_tune( self, **kwargs )
+        
+    def sample( self, nsteps=1000, show_progressbar=True, pickle_chain=None, \
+                thin_before_pickling=1, verbose=False, overwrite_existing_chains=False ):
         """
         Sample from the posterior distribution and optionally pickle the output.
         """        
         self._overwrite_existing_chains = overwrite_existing_chains
         self.show_progressbar = show_progressbar
-        Utils.mcmc_sampling( self, nsteps=nsteps, ntune_iterlim=ntune_iterlim, nconsecutive=nconsecutive, \
-                             tune_interval=tune_interval, verbose=verbose )
+        Utils.mcmc_sampling( self, nsteps=nsteps, verbose=verbose )
         if pickle_chain!=None:
             Utils.pickle_chain( self, pickle_chain=pickle_chain, thin_before_pickling=thin_before_pickling )
 
