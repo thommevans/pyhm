@@ -146,11 +146,11 @@ class MAP():
         self.model = Model( stochastics )
         Utils.update_attributes( self, stochastics )
 
-    def fit( self, method='neldermead', maxiter=1000, ftol=0.01 ):
+    def fit( self, method='neldermead', maxfun=10000, maxiter=10000, ftol=0.01 ):
         """
         Compute the maximum a posteriori solution using specified algorithm.
         """
-        Optimizers.optimize( self, method=method, maxiter=maxiter, ftol=ftol )
+        Optimizers.optimize( self, method=method, maxfun=maxfun, maxiter=maxiter, ftol=ftol )
         return None
 
     def draw_from_prior( self ):
