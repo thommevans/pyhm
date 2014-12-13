@@ -16,8 +16,8 @@ class diagonal_gaussian():
     Gaussian perturbation.
     """
 
-    def __init__( self, step_sizes=None ):
-        self.step_sizes = step_sizes
+    def __init__( self, step_sizes={} ):
+        self.proposal_kwargs = { 'step_sizes':step_sizes }
 
     def step( self, stochs, **kwargs ):
         keys = stochs.keys()
@@ -26,17 +26,22 @@ class diagonal_gaussian():
         
     def pre_tune( self, mcmc, ntune_iterlim=0, tune_interval=None, verbose=False, nconsecutive=4 ):
         keys = mcmc.model.free.keys()
-        if mcmc.step_method.proposal_kwargs['step_sizes']==None:
-            mcmc.step_method.proposal_kwargs['step_sizes'] = {}
+        if self.proposal_kwargs['step_sizes']==None:
+            self.proposal_kwargs['step_sizes'] = {}
             for key in keys:
-                mcmc.step_method.proposal_kwargs['step_sizes'][key] = 1.
-        untuned_step_sizes = mcmc.step_method.proposal_kwargs['step_sizes']
-        tuned_step_sizes = tune_diagonal_gaussian_step_sizes( mcmc, untuned_step_sizes, ntune_iterlim=ntune_iterlim, \
+                self.proposal_kwargs['step_sizes'][key] = 1.
+        untuned_step_sizes = self.proposal_kwargs['step_sizes']
+        tuned_step_sizes = tune_diagonal_gaussian_step_sizes( mcmc, untuned_step_sizes, \
+                                                              ntune_iterlim=ntune_iterlim, \
                                                               tune_interval=tune_interval, \
+                                                              rescale_all_together=True, \
                                                               verbose=verbose, nconsecutive=nconsecutive )
-        mcmc.step_method.proposal_kwargs['step_sizes'] = tuned_step_sizes
+        self.proposal_kwargs['step_sizes'] = tuned_step_sizes
 
-def tune_diagonal_gaussian_step_sizes( mcmc, step_sizes, ntune_iterlim=0, tune_interval=None, verbose=False, nconsecutive=4 ):
+
+def tune_diagonal_gaussian_step_sizes( mcmc, step_sizes, ntune_iterlim=0, tune_interval=None, \
+                                       verbose=False, nconsecutive=4, rescale_all_together=True ):
+
         unobs_stochs = mcmc.model.free
         keys = unobs_stochs.keys()
         m = ntune_iterlim
@@ -174,99 +179,99 @@ def tune_diagonal_gaussian_step_sizes( mcmc, step_sizes, ntune_iterlim=0, tune_i
                         print 'Starting value for comparison: {0}'.format( orig_stoch_values[key_j] )
                         print 'Current stepsize: {0}'.format( step_sizes[key_j] )
 
-        # Having tuned the relative step sizes, we must now rescale them
-        # together to refine the joint step sizes:
-        i = 0
-        nsuccess = 0
-        rescale_factor = 1.0/np.sqrt( npars )
-        tuning_chain = np.zeros( n, dtype=int )
-        if verbose==True:
-            print '\n\nNow tuning the step sizes simultaneously...\n'
-        while i<m+1:
+        # Having tuned the relative step sizes, now rescale them together
+        # to refine the joint step sizes if requested:
+        if rescale_all_together==True:
+            i = 0
+            nsuccess = 0
+            rescale_factor = 1.0/np.sqrt( npars )
+            tuning_chain = np.zeros( n, dtype=int )
+            if verbose==True:
+                print '\n\nNow tuning the step sizes simultaneously...\n'
+            while i<m+1:
 
-            # If there have been nconsecutive successful tune intervals
-            # in a row, break the loop:
-            if nsuccess>=nconsecutive:
-                break
+                # If there have been nconsecutive successful tune intervals
+                # in a row, break the loop:
+                if nsuccess>=nconsecutive:
+                    break
 
-            # If the iteration limit has been reached, return an error:
-            elif i==m:
-                err_str = 'Aborting tuning - exceeded {0} steps'.format( m )
-                err_str += '\n...consider reducing tune_interval'
-                raise StandardError( err_str )
+                # If the iteration limit has been reached, return an error:
+                elif i==m:
+                    err_str = 'Aborting tuning - exceeded {0} steps'.format( m )
+                    err_str += '\n...consider reducing tune_interval'
+                    raise StandardError( err_str )
 
-            # Otherwise, proceed with the tuning:
-            else:
-                k = i%n # iteration number within current tuning interval
-                i += 1
-                
-                # If this is the first iteration in a new tuning interval,
-                # reset all parameters to their original values to avoid
-                # drifting into low likelihood regions of parameter space:
-                if k==0:
-                    for key in keys:
-                        unobs_stochs[key].value = orig_stoch_values[key]
-                    current_logp = mcmc.logp()
-                    
-                # Take a step in all of the parameters simultaneously:
-                for key in keys:
-                    # If this is the first iteration in a new tuning interval,
-                    # rescale the step sizes by a constant factor before
-                    # taking the step:
-                    if k==0:
-                        step_sizes[key] *= rescale_factor
-                    unobs_stochs[key].value += Utils.gaussian_random_draw( mu=0.0, sigma=step_sizes[key] )
-                #self.step( unobs_stochs, **mcmc.step_method.proposal_kwargs )
-
-                # Decide if the step is to be accepted:
-                new_logp = mcmc.logp()
-                tuning_chain[k] = mcmc.step_method.decide( current_logp, new_logp )
-                if ( tuning_chain[k]==True ):
-                    current_logp = new_logp
-                    for key in keys:
-                        current_values[key] = unobs_stochs[key].value
+                # Otherwise, proceed with the tuning:
                 else:
+                    k = i%n # iteration number within current tuning interval
+                    i += 1
+
+                    # If this is the first iteration in a new tuning interval,
+                    # reset all parameters to their original values to avoid
+                    # drifting into low likelihood regions of parameter space:
+                    if k==0:
+                        for key in keys:
+                            unobs_stochs[key].value = orig_stoch_values[key]
+                        current_logp = mcmc.logp()
+
+                    # Take a step in all of the parameters simultaneously:
                     for key in keys:
-                        unobs_stochs[key].value = current_values[key]
+                        # If this is the first iteration in a new tuning interval,
+                        # rescale the step sizes by a constant factor before
+                        # taking the step:
+                        if k==0:
+                            step_sizes[key] *= rescale_factor
+                        unobs_stochs[key].value += Utils.gaussian_random_draw( mu=0.0, sigma=step_sizes[key] )
 
-                # If we have reached the end of the current tuning interval,
-                # adjust the step size rescaling factor based on the fraction
-                # of steps that were accepted:
-                if k==n-1:
-                    naccepted = np.sum( tuning_chain )
-                    accfrac = naccepted/float( n )
-                    if ( accfrac>=0.2 )*( accfrac<=0.4 ):
-                        nsuccess += 1
-                        rescale_factor = 1.0
+                    # Decide if the step is to be accepted:
+                    new_logp = mcmc.logp()
+                    tuning_chain[k] = mcmc.step_method.decide( current_logp, new_logp )
+                    if ( tuning_chain[k]==True ):
+                        current_logp = new_logp
+                        for key in keys:
+                            current_values[key] = unobs_stochs[key].value
                     else:
-                        nsuccess = 0
-                        if ( accfrac<=0.01 ):
-                            rescale_factor = 1./1.6
-                        elif ( accfrac>0.01 )*( accfrac<=0.05 ):
-                            rescale_factor = 1./1.4
-                        elif ( accfrac>0.05 )*( accfrac<=0.10 ):
-                            rescale_factor = 1./1.2
-                        elif ( accfrac>0.10 )*( accfrac<=0.15 ):
-                            rescale_factor = 1./1.1
-                        elif ( accfrac>0.15 )*( accfrac<0.2 ):
-                            rescale_factor = 1./1.01
-                        elif ( accfrac>0.35 )*( accfrac<=0.45 ):
-                            rescale_factor = 1.01
-                        elif ( accfrac>0.45 )*( accfrac<=0.50 ):
-                            rescale_factor = 1.1
-                        elif ( accfrac>0.50 )*( accfrac<=0.55 ):
-                            rescale_factor = 1.2
-                        elif ( accfrac>0.55 )*( accfrac<=0.60 ):
-                            rescale_factor = 1.4
-                        elif ( accfrac>0.60 ):
-                            rescale_factor = 1.6
+                        for key in keys:
+                            unobs_stochs[key].value = current_values[key]
 
-                    if verbose==True:
-                        print 'Consecutive successes = {0}'.format( nsuccess )
-                        print 'Accepted fraction from last {0} steps = {1}'\
-                              .format( n, accfrac )
+                    # If we have reached the end of the current tuning interval,
+                    # adjust the step size rescaling factor based on the fraction
+                    # of steps that were accepted:
+                    if k==n-1:
+                        naccepted = np.sum( tuning_chain )
+                        accfrac = naccepted/float( n )
+                        if ( accfrac>=0.2 )*( accfrac<=0.4 ):
+                            nsuccess += 1
+                            rescale_factor = 1.0
+                        else:
+                            nsuccess = 0
+                            if ( accfrac<=0.01 ):
+                                rescale_factor = 1./1.6
+                            elif ( accfrac>0.01 )*( accfrac<=0.05 ):
+                                rescale_factor = 1./1.4
+                            elif ( accfrac>0.05 )*( accfrac<=0.10 ):
+                                rescale_factor = 1./1.2
+                            elif ( accfrac>0.10 )*( accfrac<=0.15 ):
+                                rescale_factor = 1./1.1
+                            elif ( accfrac>0.15 )*( accfrac<0.2 ):
+                                rescale_factor = 1./1.01
+                            elif ( accfrac>0.35 )*( accfrac<=0.45 ):
+                                rescale_factor = 1.01
+                            elif ( accfrac>0.45 )*( accfrac<=0.50 ):
+                                rescale_factor = 1.1
+                            elif ( accfrac>0.50 )*( accfrac<=0.55 ):
+                                rescale_factor = 1.2
+                            elif ( accfrac>0.55 )*( accfrac<=0.60 ):
+                                rescale_factor = 1.4
+                            elif ( accfrac>0.60 ):
+                                rescale_factor = 1.6
 
-        print 'Finished tuning with acceptance rate of {0:.1f}%'.format( accfrac*100 )
+                        if verbose==True:
+                            print 'Consecutive successes = {0}'.format( nsuccess )
+                            print 'Accepted fraction from last {0} steps = {1}'\
+                                  .format( n, accfrac )
+
+            print 'Finished tuning with acceptance rate of {0:.1f}%'.format( accfrac*100 )
 
         for key in keys:
             unobs_stochs[key].value = orig_stoch_values[key]
@@ -282,9 +287,8 @@ class mv_gaussian():
     covcols is a list containing the labels of each Stoch in the order
     corresponding to the covariance matrix columns.
     """
-    def __init__( self, covmatrix=None, covcols=None ):
-        self.covmatrix = covmatrix
-        self.covcols = covcols
+    def __init__( self, covmatrix=None, covcols=[] ):
+        self.proposal_kwargs = { 'covmatrix':covmatrix, 'covcols':covcols }
 
     def step( self, stochs, **kwargs ):
         keys = stochs.keys()
@@ -296,23 +300,27 @@ class mv_gaussian():
             stochs[key].value += steps[i]
 
     def pre_tune( self, mcmc, ntune_iterlim=0, tune_interval=None, verbose=False, nconsecutive=4, \
-                  ncov_sample=0, step_sizes_init=None ):
+                  ncov_sample=0, ncov_iters=2, step_sizes_init=None ):
         keys = mcmc.model.free.keys()
         npar = len( keys )
         if step_sizes_init==None:
             step_sizes_init = {}
             for key in keys:
                 step_sizes_init[key] = 1
-        step_sizes_tuned = tune_diagonal_gaussian_step_sizes( mcmc, step_sizes_init, ntune_iterlim=ntune_iterlim, \
-                                                              tune_interval=tune_interval, \
-                                                              verbose=verbose, nconsecutive=nconsecutive )
+        for i in range( ncov_iters ):
+            step_sizes_tuned = tune_diagonal_gaussian_step_sizes( mcmc, step_sizes_init, \
+                                                                  ntune_iterlim=ntune_iterlim, \
+                                                                  tune_interval=tune_interval, \
+                                                                  rescale_all_together=False, \
+                                                                  verbose=verbose, nconsecutive=nconsecutive )
+            step_sizes_init = step_sizes_tuned
         npar = len( keys )
         covmatrix = np.zeros( [ npar, npar ] )
         covcols = []
         for i in range( npar ):
             covcols += [ keys[i] ]
             covmatrix[i,i] = step_sizes_tuned[keys[i]]**2.
-        mcmc.step_method.proposal_kwargs = { 'covmatrix':covmatrix, 'covcols':covcols }
+        self.proposal_kwargs = { 'covmatrix':covmatrix, 'covcols':covcols }
         mcmc._overwrite_existing_chains = True
         # todo = possibly iterate this step a few times to hopefully
         # increase the chance that the covariance matrix is a reasonable
@@ -322,4 +330,4 @@ class mv_gaussian():
         for key in keys:
             chains += [ mcmc.chain[key] ]
         chains = np.row_stack( chains )
-        mcmc.step_method.proposal_kwargs['covmatrix'] = np.cov( chains )
+        self.proposal_kwargs['covmatrix'] = np.cov( chains )

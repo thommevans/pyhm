@@ -76,6 +76,7 @@ def Uniform( name, lower=0.0, upper=1.0, value=None, observed=False, dtype=float
             logp = 1.0
         else:
             logp = -np.inf
+
         return logp
 
     def random( parent_values ):

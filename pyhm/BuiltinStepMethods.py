@@ -21,7 +21,6 @@ class MetropolisHastings():
         Initialises the sampling algorithm.
         """
         self.proposal_distribution = None
-        self.proposal_kwargs = {}
 
 
     def assign_proposal_distribution( self, proposal_distribution ):
@@ -35,7 +34,8 @@ class MetropolisHastings():
         """
         Proposes a step in the parameter space.
         """
-        self.proposal_distribution.step( unobs_stochs, **self.proposal_kwargs ) # **kwargs should be built in already
+        proposal_kwargs = self.proposal_distribution.proposal_kwargs
+        self.proposal_distribution.step( unobs_stochs, **proposal_kwargs )
 
 
     def decide( self, current_logp, new_logp ):

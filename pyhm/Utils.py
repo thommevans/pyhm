@@ -292,7 +292,7 @@ def assign_step_method( mcmc, step_method ):
     Assigns a step method to a Sampler object.
     """
     
-    mcmc.step_method = step_method()#( **kwargs )
+    mcmc.step_method = step_method()
     if hasattr( mcmc.step_method, 'pre_tune' )==True:
         def mcmc_pre_tune( ntune_iterlim=0, tune_interval=None, **kwargs_pre_tune ):
             mcmc.step_method.pre_tune( mcmc, ntune_iterlim=ntune_iterlim, \
