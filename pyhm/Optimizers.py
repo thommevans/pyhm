@@ -75,8 +75,10 @@ def optimize( MAP, method='neldermead', maxfun=10000, maxiter=10000, ftol=None, 
     # Run the optimizer specified in the call:
     if method=='neldermead':
         if ftol==None:
-            ftol = 0.01
-        xopt = scipy.optimize.fmin( func, x0, ftol=ftol, maxiter=maxiter, maxfun=maxfun, \
+            ftol = 1e-6
+        ftol=1e-12
+        xtol=1e-12
+        xopt = scipy.optimize.fmin( func, x0, xtol=xtol, ftol=ftol, maxiter=maxiter, maxfun=maxfun, \
                                     full_output=0, disp=verbose )
     elif method=='powell':
         if ftol==None:
@@ -87,7 +89,11 @@ def optimize( MAP, method='neldermead', maxfun=10000, maxiter=10000, ftol=None, 
             print ''
             warn_str = '\nConjugate gradient does not accept ftol (ignoring)\n'
             warnings.warn( warn_str )
-        xopt = scipy.optimize.fmin_cg( func, x0, maxiter=maxiter, full_output=0, disp=verbose )
+            pdb.set_trace()
+        gtol = 1e-6 # stop when gradient less than this
+        xopt = scipy.optimize.fmin_cg( func, x0, maxiter=maxiter, full_output=0, disp=verbose, gtol=gtol )
+    else:
+        pdb.set_trace() # method not recognised
 
     # Update the stochastic values to the best-fit values
     # obtained by the optimizer:
@@ -102,26 +108,100 @@ def optimize( MAP, method='neldermead', maxfun=10000, maxiter=10000, ftol=None, 
             else:
                 free_stochastics[keys[i]].value = np.array( xopt_i )                
 
-    MAP.logp_hess = -hessian( func, xopt )
-    #xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
-    #ydata = 1+2*np.exp(0.75*xdata)
-    #fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
-    #xx=np.array([1,2,0.75])
-    #AA=hessian(fun,xx)
-    #aa=AA(xx)
-    #BB=nd.Jacobian(fun)
-    #bb=BB(xx)
-    #print aa-bb
-    #print 'aaaaaa'
-    #pdb.set_trace()
-    try:
-        MAP.pcov = np.linalg.inv( -MAP.logp_hess )
-    except:
-        MAP.pcov = np.inf
+    n0=len(xopt)
+    hess = np.zeros( [n0,n0])
+    eps = 1e-8
+    import copy
+    for i in range(n0):
+        xx=copy.deepcopy(xopt)
+        xx[i] -= eps
+        f1=func(xx)
+        xx=copy.deepcopy(xopt)
+        xx[i] += eps
+        f2=func(xx)
+        xx=copy.deepcopy(xopt)
+        f3=func(xx)
+        hess[i,i]=(f1+f2-2*f3)/(eps**2.)
+        
+    MAP.logp_hess = hessian( func, xopt )
+    #try:
+    #    MAP.pcov = np.linalg.inv( -MAP.logp_hess )
+    #except:
+    #    MAP.pcov = np.inf
+    MAP.pcov = np.linalg.inv(MAP.logp_hess)
+
+    print MAP.pcov
     return None
 
+def hessian( f, x0 ):
+    delta = (1e-7)
+    dim = len( x0 )
+    deltaVec = delta*np.abs(x0)
+    ixs = deltaVec<delta
+    deltaVec[ixs] = delta
+    deltaMat = np.diag(deltaVec)
+    deltaVec = np.reshape(deltaVec,[dim,1])
+    fx = f(x0)
+    Hess = np.zeros([dim,dim])
+    for m in range(dim):
+        deltaUse=deltaMat[m,:]
+        Hess[m,m] = (-f(x0+2*deltaUse)+16*f(x0+deltaUse)-30*fx+16*f(x0-deltaUse)-f(x0-2*deltaUse))/12.
+        for n in range(m,dim):
+            delta1 = deltaMat[m,:]
+            delta2 = deltaMat[n,:]
+            Hess[n,m] = (f(x0+delta1+delta2)-f(x0+delta1-delta2)-f(x0-delta1+delta2)+f(x0-delta1-delta2))/4.
+            Hess[m,n] = Hess[n,m]
+            print m, n, Hess[m,n], Hess[m,m]
+    divid = np.dot(deltaVec,deltaVec.T)
+    Hess /= divid
+    return Hess
 
-def hessian ( f, x0, epsilon=1.e-8, linear_approx=False ):
+def hessian_OLD2( f, x0 ):
+
+    n = len( x0 )
+    #epsilon = np.sqrt( (1e-7)*np.abs(x0) )
+    epsilon = (1e-8)*np.abs(x0)
+    test = scipy.optimize.approx_fprime(x0,f,epsilon)
+    hess = np.zeros( [ n, n ] )
+    x = x0
+    for i in range( n ):
+        h = epsilon[i]
+        for j in range( n ):
+            k = epsilon[j]
+            if i==j:
+                x = x0
+                x[i] += h
+                f1 = f(x)
+                x = x0
+                f2 = f(x)
+                x = x0
+                x[i] -= h
+                f3 = f(x)
+                d2 = (f1-2*f2+f3)/(h**2.)
+            else:
+                x = x0
+                x[i] += h
+                x[j] += k
+                f1 = f(x)
+                x = x0
+                x[i] += h
+                x[j] -= k
+                f2 = f(x)
+                x = x0
+                x[i] -= h
+                x[j] += k
+                f3 = f(x)
+                x = x0
+                x[i] -= h
+                x[j] -= k
+                f4 = f(x)
+                d2 = (f1-f2-f3+f4)/(4*h*k)
+            print x0
+            hess[i,j] = d2
+    pdb.set_trace()
+    return hess
+
+def hessian_OLD( f, x0, epsilon=1.e-8, linear_approx=False ):
     """
     A numerical approximation to the Hessian matrix of cost function at
     location x0 (hopefully, the minimum). THIS NEEDS TO BE CHECKED!!!!
@@ -149,3 +229,4 @@ def hessian ( f, x0, epsilon=1.e-8, linear_approx=False ):
         hessian[:, j] = (f2 - f1)/epsilon # scale...
         xx[j] = xx0 # Restore initial value of x0
     return hessian
+
