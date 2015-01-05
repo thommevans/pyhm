@@ -12,7 +12,9 @@ except:
 This module defines the optimization algorithms for MAP objects.
 """
 
-def optimize( MAP, method='neldermead', maxfun=10000, maxiter=10000, ftol=None, xtol=None, verbose=False, epsilon=1e-5 ):
+EPSILON = 1e-4
+
+def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=10000, ftol=None, xtol=None, epsilon=EPSILON ):
     """
     Wrapper for the scipy optimizers.
 
@@ -131,18 +133,18 @@ def optimize( MAP, method='neldermead', maxfun=10000, maxiter=10000, ftol=None, 
             MAP.pcov[ixs[i],ixs[j]] = y[i,j]
     return None
 
-def hessian( f, x0, epsilon=1e-5 ):
+def hessian( f, x0, epsilon=EPSILON ):
     """
     Numerically approximate the Hessian matrix using finite differencing.
     """
     dim = len( x0 )
-    deltaVec = epsilon*np.abs(x0)
-    ixs = deltaVec<epsilon
+    deltaVec = epsilon*np.abs( x0 )
+    ixs = ( deltaVec<epsilon )
     deltaVec[ixs] = epsilon
-    deltaMat = np.diag(deltaVec)
-    deltaVec = np.reshape(deltaVec,[dim,1])
-    fx = f(x0)
-    Hess = np.zeros([dim,dim])
+    deltaMat = np.diag( deltaVec )
+    deltaVec = np.reshape( deltaVec, [ dim, 1 ] )
+    fx = f( x0 )
+    Hess = np.zeros( [ dim, dim ] )
     for m in range(dim):
         deltaUse=deltaMat[m,:]
         Hess[m,m] = (-f(x0+2*deltaUse)+16*f(x0+deltaUse)-30*fx+16*f(x0-deltaUse)-f(x0-2*deltaUse))/12.
