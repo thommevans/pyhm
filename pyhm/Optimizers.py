@@ -143,6 +143,7 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
 def hessian( f, x0, epsilon=EPSILON ):
     """
     Numerically approximate the Hessian matrix using finite differencing.
+    Note that the function f is the negative log likelihood.
     """
     dim = len( x0 )
     deltaVec = epsilon*np.abs( x0 )
