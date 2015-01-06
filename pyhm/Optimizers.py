@@ -103,7 +103,6 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
         if gtol!=None:
             gtol = 1e-8 # stop when gradient less than this
         xopt = scipy.optimize.fmin_cg( func, x0, maxiter=maxiter, full_output=0, disp=verbose, gtol=gtol )
-        pdb.set_trace()
     else:
         pdb.set_trace() # method not recognised
 
