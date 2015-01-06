@@ -12,9 +12,15 @@ except:
 This module defines the optimization algorithms for MAP objects.
 """
 
-EPSILON = 1e-4
+# TODO = Add functionality for minimising a vector of weighted residuals (currently only
+# have optimisation routines that minimise scalar-values functions). The reason for wanting
+# to find the root of vector-valued functions (i.e. those that return a vector of residuals)
+# is because nonlinear root-finding algorithms seem to be much faster than nonlinear 
+# optimisation algorithms.  
 
-def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=10000, ftol=None, xtol=None, epsilon=EPSILON ):
+EPSILON = 1e-6
+
+def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=10000, ftol=None, xtol=None, gtol=None, epsilon=EPSILON ):
     """
     Wrapper for the scipy optimizers.
 
@@ -94,8 +100,10 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
             warn_str = '\nConjugate gradient does not accept ftol (ignoring)\n'
             warnings.warn( warn_str )
             pdb.set_trace()
-        gtol = 1e-8 # stop when gradient less than this
+        if gtol!=None:
+            gtol = 1e-8 # stop when gradient less than this
         xopt = scipy.optimize.fmin_cg( func, x0, maxiter=maxiter, full_output=0, disp=verbose, gtol=gtol )
+        pdb.set_trace()
     else:
         pdb.set_trace() # method not recognised
 
