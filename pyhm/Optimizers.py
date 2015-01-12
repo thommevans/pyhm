@@ -83,16 +83,16 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
     # Run the optimizer specified in the call:
     if method=='neldermead':
         if ftol==None:
-            ftol = 1e-8
+            ftol = 1e-4
         if xtol==None:
-            xtol = 1e-8
+            xtol = 1e-4
         xopt = scipy.optimize.fmin( func, x0, xtol=xtol, ftol=ftol, maxiter=maxiter, maxfun=maxfun, \
                                     full_output=0, disp=verbose )
     elif method=='powell':
         if ftol==None:
-            ftol = 1e-8
+            ftol = 1e-4
         if xtol==None:
-            xtol = 1e-8
+            xtol = 1e-4
         xopt = scipy.optimize.fmin_powell( func, x0, ftol=ftol, maxiter=maxiter, full_output=0, disp=verbose )
     elif method=='conjgrad':
         if ftol!=None:
@@ -101,7 +101,7 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
             warnings.warn( warn_str )
             pdb.set_trace()
         if gtol!=None:
-            gtol = 1e-8 # stop when gradient less than this
+            gtol = 1e-4 # stop when gradient less than this
         xopt = scipy.optimize.fmin_cg( func, x0, maxiter=maxiter, full_output=0, disp=verbose, gtol=gtol )
     else:
         pdb.set_trace() # method not recognised
@@ -131,13 +131,20 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
     # to estimate the Hessian properly with the allowed parameter ranges
     # taken into account....
     ixs = np.arange( nstoch )[np.isfinite( np.diag( MAP.logp_hess ) )==True]
-    y = np.linalg.inv( MAP.logp_hess[ixs,:][:,ixs] )
     # Start with matrix of nans
     MAP.pcov = np.nan*np.ones( [ nstoch, nstoch]  )
-    # Fill in columns/rows that have finite values:
-    for i in range( len( ixs ) ):
-        for j in range( len( ixs ) ):
-            MAP.pcov[ixs[i],ixs[j]] = y[i,j]
+    try:
+        # Attempt to invert the Hessian:
+        y = np.linalg.inv( MAP.logp_hess[ixs,:][:,ixs] )
+        # Fill in columns/rows that have finite values:
+        for i in range( len( ixs ) ):
+            for j in range( len( ixs ) ):
+                MAP.pcov[ixs[i],ixs[j]] = y[i,j]
+    except:
+        # If the Hessian is singular, it cannot be inverted:
+        warn_str = 'Could not invert Hessian - filling pcov with NaNs'
+        warnings.warn( warn_str )
+
     return None
 
 def hessian( f, x0, epsilon=EPSILON ):
