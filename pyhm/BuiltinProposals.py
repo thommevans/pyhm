@@ -39,6 +39,56 @@ class diagonal_gaussian():
         self.proposal_kwargs['step_sizes'] = tuned_step_sizes
 
 
+def tune_proposal_covmatrix( mcmc, ntune_iterlim=0, tune_interval=500, nconsecutive=3, verbose=False ):
+    mcmc._overwrite_existing_chains = True
+    nsteps = 0
+    covcols = mcmc.step_method.proposal_distribution.proposal_kwargs['covcols']
+    npar = len( covcols )
+    chains = []
+    accfrac = 0
+    nsuccess = 0
+    while ( nsteps<ntune_iterlim )*( nsuccess<nconsecutive ):
+        Utils.mcmc_sampling( mcmc, nsteps=tune_interval, verbose=verbose )
+        mcmc._overwrite_existing_chains = False
+        cov1 = mcmc.step_method.proposal_distribution.proposal_kwargs['covmatrix']
+        nsteps += tune_interval
+        chains = []
+        for key in covcols:
+            chains += [ mcmc.chain[key][-tune_interval:] ]
+        chains = np.row_stack( chains )
+        cov2 = np.cov( chains )
+        covnew = 0.2*cov1 + 0.8*cov2
+        nacc = mcmc.chain['accepted'][-tune_interval:].sum()
+        accfrac = float( nacc )/float( tune_interval )
+        if ( accfrac>=0.2 )*( accfrac<=0.4 ):
+            nsuccess +=1
+        else:
+            nsuccess = 0
+        if ( accfrac<=0.01 ):
+            rescale_factor = 1./1.6
+        elif ( accfrac>0.01 )*( accfrac<=0.05 ):
+            rescale_factor = 1./1.4
+        elif ( accfrac>0.05 )*( accfrac<=0.10 ):
+            rescale_factor = 1./1.2
+        elif ( accfrac>0.10 )*( accfrac<=0.15 ):
+            rescale_factor = 1./1.1
+        elif ( accfrac>0.15 )*( accfrac<0.2 ):
+            rescale_factor = 1./1.01
+        elif ( accfrac>0.35 )*( accfrac<=0.45 ):
+            rescale_factor = 1.01
+        elif ( accfrac>0.45 )*( accfrac<=0.50 ):
+            rescale_factor = 1.1
+        elif ( accfrac>0.50 )*( accfrac<=0.55 ):
+            rescale_factor = 1.2
+        elif ( accfrac>0.55 )*( accfrac<=0.60 ):
+            rescale_factor = 1.4
+        elif ( accfrac>0.60 ):
+            rescale_factor = 1.6
+        covtuned = covnew*rescale_factor
+        print '\n\nAAA', accfrac
+        mcmc.step_method.proposal_distribution.proposal_kwargs['covmatrix'] = covtuned
+    return covtuned
+
 def tune_diagonal_gaussian_step_sizes( mcmc, step_sizes, ntune_iterlim=0, tune_interval=None, \
                                        verbose=False, nconsecutive=4, rescale_all_together=True ):
 
@@ -298,9 +348,9 @@ class mv_gaussian():
         for i in range( npar ):
             key = kwargs['covcols'][i]
             stochs[key].value += steps[i]
-
-    def pre_tune( self, mcmc, ntune_iterlim=0, tune_interval=None, verbose=False, nconsecutive=4, \
-                  ncov_sample=0, ncov_iters=2, step_sizes_init=None ):
+    
+    def pre_tune_original( self, mcmc, ntune_iterlim=0, tune_interval=None, verbose=False, nconsecutive=4, \
+                  ncov_sample=0, ncov_iters=2, step_sizes_init=None, method='new' ):
         keys = mcmc.model.free.keys()
         npar = len( keys )
         if step_sizes_init==None:
@@ -331,3 +381,11 @@ class mv_gaussian():
             chains += [ mcmc.chain[key] ]
         chains = np.row_stack( chains )
         self.proposal_kwargs['covmatrix'] = np.cov( chains )
+
+
+    def pre_tune( self, mcmc, covcols=None, covinit=None, ntune_iterlim=0, tune_interval=None, nconsecutive=3, verbose=None ):
+        self.proposal_kwargs = { 'covmatrix':covinit, 'covcols':covcols }
+        covtuned = tune_proposal_covmatrix( mcmc, ntune_iterlim=ntune_iterlim, tune_interval=tune_interval, \
+                                            nconsecutive=nconsecutive, verbose=verbose )
+        self.proposal_kwargs = { 'covmatrix':covtuned, 'covcols':covcols }
+        pdb.set_trace()
