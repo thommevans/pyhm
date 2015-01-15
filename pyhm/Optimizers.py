@@ -2,11 +2,6 @@ import numpy as np
 import scipy.optimize
 import Utils
 import sys, pdb, warnings
-try:
-    import numdifftools as nd
-    nd_installed = True
-except:
-    nd_installed = False
 
 """
 This module defines the optimization algorithms for MAP objects.
