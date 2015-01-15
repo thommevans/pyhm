@@ -35,6 +35,12 @@ class MetropolisHastings():
         Proposes a step in the parameter space.
         """
         proposal_kwargs = self.proposal_distribution.proposal_kwargs
+        #print '\n\nBBBB'
+        #cc = proposal_kwargs['covcols']
+        #for i in range(len(cc)):
+        #    print cc[i], np.sqrt( np.diag(proposal_kwargs['covmatrix'])[i] )
+        #print self.proposal_distribution
+        #pdb.set_trace()
         self.proposal_distribution.step( unobs_stochs, **proposal_kwargs )
 
 
@@ -48,6 +54,7 @@ class MetropolisHastings():
         else: 
             alpha = np.exp( beta )
             z = np.random.random()
+            #if z<=alpha:
             if z<=alpha:
                 decision = True
             else:

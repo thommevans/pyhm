@@ -139,7 +139,6 @@ def mcmc_sampling( sampler, nsteps=1000, show_progressbar=True, verbose=False ):
 
     sampler.nsteps = nsteps
     if ( sampler._chain_exists==False )+( sampler._overwrite_existing_chains==True ):
-
         # If a chain doesn't already exist (i.e. this is a new chain), then
         # initialise with pre-tuning etc:
         sampler.chain = {}
@@ -158,7 +157,6 @@ def mcmc_sampling( sampler, nsteps=1000, show_progressbar=True, verbose=False ):
 
         pre_steps = 0 # i.e. this is a new chain
     else:
-
         # If a chain already exists, check how long it is:
         pre_steps = len( sampler.chain['logp'] )
         # Now extend the chain to accommodate the new steps
@@ -191,6 +189,12 @@ def mcmc_sampling( sampler, nsteps=1000, show_progressbar=True, verbose=False ):
         step_method.propose( unobs_stochs )
         new_logp = sampler.logp()
         sampler.chain['accepted'][pre_steps+i] = step_method.decide( current_logp, new_logp )
+        #print '\nAAAAAA', current_logp, new_logp
+        #cc=np.sqrt(np.diag(sampler.step_method.proposal_distribution.proposal_kwargs['covmatrix']))
+        #kk=sampler.step_method.proposal_distribution.proposal_kwargs['covcols']
+        #for ii in range(len(kk)):
+        #    print kk[ii], 'value=', sampler.model.free[kk[ii]].value, 'stepsize=', cc[ii], 'logp=', sampler.model.free[kk[ii]].logp()
+        #pdb.set_trace()
         if sampler.chain['accepted'][pre_steps+i]==True:
             current_logp = new_logp
             for key in unobs_stochs_keys:
@@ -295,12 +299,12 @@ def assign_step_method( mcmc, step_method ):
     """
     
     mcmc.step_method = step_method()
-    if hasattr( mcmc.step_method, 'pre_tune' )==True:
-        def mcmc_pre_tune( tune_interval=None, **kwargs_pre_tune ):
-            mcmc.step_method.pre_tune( mcmc, \
-                                       tune_interval=tune_interval, **kwargs_pre_tune )
+    if hasattr( mcmc.step_method, 'pretune' )==True:
+        def mcmc_pretune( tune_interval=None, **kwargs_pretune ):
+            mcmc.step_method.pretune( mcmc, \
+                                      tune_interval=tune_interval, **kwargs_pretune )
             return None
-        mcmc.pre_tune = mcmc_pre_tune
+        mcmc.pretune = mcmc_pretune
     #update_attributes( mcmc.step_method, **kwargs )    
 
     return None

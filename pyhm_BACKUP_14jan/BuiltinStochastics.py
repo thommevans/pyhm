@@ -73,7 +73,7 @@ def Uniform( name, lower=0.0, upper=1.0, value=None, observed=False, dtype=float
         lower_value = parent_values['lower']
         upper_value = parent_values['upper']
         if np.any( value>=lower_value )*np.any( value<=upper_value ):
-            logp = 0#1.0
+            logp = 0.0
         else:
             logp = -np.inf
 
