@@ -97,40 +97,26 @@ def tune_proposal_covmatrix( mcmc, ntune_min=0, ntune_max=0, tune_interval=500, 
     chains = []
     accfrac = 0
     nsuccess = 0
-    while ( nsteps<ntune_min )+( ( nsteps<ntune_max )*( nsuccess<nconsecutive ) ):
-        mcmc.sample( nsteps=tune_interval, verbose=verbose, overwrite_existing_chains=True )
+    rescale_factor = ( 2.4**2 )/float( npar )
+    mcmc.step_method.proposal_distribution.proposal_kwargs['covmatrix'] *= rescale_factor
+    while ( nsteps<ntune_min )+( ( nsteps<ntune_max )*( nsuccess<nconsecutive ) ):    
+        Utils.mcmc_sampling( mcmc, nsteps=tune_interval, verbose=verbose )
+        mcmc._overwrite_existing_chains = False
         cov1 = mcmc.step_method.proposal_distribution.proposal_kwargs['covmatrix']
         nsteps += tune_interval
         chains = []
         for key in covcols:
-            chains += [ mcmc.chain[key] ]
+            chains += [ mcmc.chain[key][-tune_interval:] ]
         chains = np.row_stack( chains )
         cov2 = np.cov( chains )
         covnew = 0.3*cov1 + 0.7*cov2
-        nacc = mcmc.chain['accepted'].sum()
+        nacc = mcmc.chain['accepted'][-tune_interval:].sum()
         accfrac = float( nacc )/float( tune_interval )
         if ( accfrac>=0.2 )*( accfrac<=0.4 ):
             nsuccess +=1
-            rescale_factor = 1
         else:
             nsuccess = 0
-            if ( accfrac<=0.001 ):
-                rescale_factor = 0.1
-            elif ( accfrac<0.05 ):
-                rescale_factor = 0.2
-            elif ( accfrac<0.20 ):
-                rescale_factor = 0.3
-            elif ( accfrac<0.25 ):
-                rescale_factor = 0.6
-            elif ( accfrac>0.35 ):
-                rescale_factor = 1./0.6
-            elif ( accfrac>0.55 ):
-                rescale_factor = 1./0.3
-            elif ( accfrac>0.75 ):
-                rescale_factor = 1./0.2
-            elif ( accfrac>0.95 ):
-                rescale_factor = 1./0.1
-        print '\n\nAAA', accfrac
+        rescale_factor *= ( 1./0.25 )*np.min( [ 0.9, np.max( [ 0.1, float( accfrac ) ] ) ] )
         covtuned = covnew*rescale_factor
         mcmc.step_method.proposal_distribution.proposal_kwargs['covmatrix'] = covtuned
     if nsteps>ntune_max:
@@ -139,7 +125,7 @@ def tune_proposal_covmatrix( mcmc, ntune_min=0, ntune_max=0, tune_interval=500, 
     elif verbose==True:
         print 'Tuning finished with step acceptance rate of {0:.2f}%'.format( accfrac*100 ) 
     mcmc.step_method.proposal_distribution.proposal_kwargs['covmatrix'] = cov1
-    pdb.set_trace()
+
     return covtuned
 
 
