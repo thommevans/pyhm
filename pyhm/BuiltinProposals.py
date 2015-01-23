@@ -119,11 +119,15 @@ def tune_proposal_covmatrix( mcmc, ntune_min=0, ntune_max=0, tune_interval=500, 
         rescale_factor *= ( 1./0.25 )*np.min( [ 0.9, np.max( [ 0.1, float( accfrac ) ] ) ] )
         covtuned = covnew*rescale_factor
         mcmc.step_method.proposal_distribution.proposal_kwargs['covmatrix'] = covtuned
+        if verbose==True:
+            print '\nAcceptance fraction = {0:.2f} (from last {1:.0f} steps)'.format( accfrac, tune_interval )
+            print 'Total tuning steps taken = {0:.0f}'.format( nsteps )
+            print '(ntune_min={0:.0f}, ntune_max={1:.0f}\n'.format( ntune_min, ntune_max )
     if nsteps>ntune_max:
-        warn_str = 'Aborting tuning - maximum step limit reached'
+        warn_str = '\nAborting tuning - maximum step limit reached'
         warnings.warn( warn_str )
     elif verbose==True:
-        print 'Tuning finished with step acceptance rate of {0:.2f}%'.format( accfrac*100 ) 
+        print '\nTuning finished with step acceptance rate of {0:.2f}%'.format( accfrac*100 ) 
     mcmc.step_method.proposal_distribution.proposal_kwargs['covmatrix'] = cov1
 
     return covtuned
