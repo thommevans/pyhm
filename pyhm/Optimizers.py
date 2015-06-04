@@ -60,7 +60,6 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
     # Define the negative log likelihood in the format
     # that the scipy optimizers require:
     def func( x, *args ):
-
         # Update the values of each stochastic using the
         # values provided in the input array x, making
         # use of the stochixs array (created above) to
@@ -113,10 +112,9 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
                 free_stochastics[keys[i]].value = float( xopt_i )
             else:
                 free_stochastics[keys[i]].value = np.array( xopt_i )
-
     # Evaluate the Hessian matrix of logp at the location of the
     # maximum likelihood parameter values:
-    MAP.logp_hess = hessian( func, xopt, epsilon=epsilon )
+    MAP.logp_hess = hessian( func, xopt, MAP, epsilon=epsilon )
 
     # NOTE: Sometimes if the numerical approximation to the Hessian requires
     # evaluating func outside the allowed parameter range, the corresponding
@@ -142,11 +140,15 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
 
     return None
 
-def hessian( f, x0, epsilon=EPSILON ):
+def hessian( f, x0, MAP, epsilon=EPSILON ):
     """
     Numerically approximate the Hessian matrix using finite differencing.
     Note that the function f is the negative log likelihood.
     """
+    keys = MAP.model.stochastics.keys()
+    orig_vals = {}
+    for key in keys:
+        orig_vals[key] = MAP.model.stochastics[key].value
     dim = len( x0 )
     deltaVec = epsilon*np.abs( x0 )
     ixs = ( deltaVec<epsilon )
@@ -163,6 +165,8 @@ def hessian( f, x0, epsilon=EPSILON ):
             delta2 = deltaMat[n,:]
             Hess[n,m] = (f(x0+delta1+delta2)-f(x0+delta1-delta2)-f(x0-delta1+delta2)+f(x0-delta1-delta2))/4.
             Hess[m,n] = Hess[n,m]
+    for key in keys:
+        MAP.model.stochastics[key].value = orig_vals[key]
     divid = np.dot(deltaVec,deltaVec.T)
     Hess *= 1./divid
     return Hess

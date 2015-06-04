@@ -121,8 +121,9 @@ def tune_proposal_covmatrix( mcmc, ntune_min=0, ntune_max=0, tune_interval=500, 
         mcmc.step_method.proposal_distribution.proposal_kwargs['covmatrix'] = covtuned
         if verbose==True:
             print '\nAcceptance fraction = {0:.2f} (from last {1:.0f} steps)'.format( accfrac, tune_interval )
+            print 'nconsecutive = {0:.0f} (require {1:.0f})'.format( nsuccess, nconsecutive )
             print 'Total tuning steps taken = {0:.0f}'.format( nsteps )
-            print '(ntune_min={0:.0f}, ntune_max={1:.0f}\n'.format( ntune_min, ntune_max )
+            print '(ntune_min={0:.0f}, ntune_max={1:.0f})\n'.format( ntune_min, ntune_max )
     if nsteps>ntune_max:
         warn_str = '\nAborting tuning - maximum step limit reached'
         warnings.warn( warn_str )
