@@ -361,8 +361,20 @@ def chain_properties( chain, nburn=None, thin=None, print_to_screen=True ):
         if print_to_screen==True:
             print '  {0} --> {1}, {2}, {3}'.format( freepars[i], median[parkey[i]], \
                                                     l34[parkey[i]], u34[parkey[i]] )
-
-    return parkey, mean, median, stdev, l34, u34
+    output = {}
+    output['mean'] = {}
+    output['median'] = {}
+    output['stdev'] = {}
+    output['l34'] = {}
+    output['u34'] = {}
+    for i in range( npars ):
+        output['mean'][parkey[i]] = mean[i]
+        output['median'][parkey[i]] = median[i]
+        output['stdev'][parkey[i]] = stdev[i]
+        output['l34'][parkey[i]] = l34[i]
+        output['u34'][parkey[i]] = u34[i]
+        
+    return output
 
 
 def print_chain_properties_OLD( sampler, nburn=None, thin=None ):
