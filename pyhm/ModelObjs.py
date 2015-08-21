@@ -64,13 +64,17 @@ class MCMC():
         self.step_method.pretune( self, **kwargs )
         
     def sample( self, nsteps=1000, show_progressbar=True, pickle_chain=None, \
-                thin_before_pickling=1, verbose=False, overwrite_existing_chains=False ):
+                thin_before_pickling=1, verbose=False, overwrite_existing_chains=False, \
+                **kwargs ):
         """
         Sample from the posterior distribution and optionally pickle the output.
         """        
         self._overwrite_existing_chains = overwrite_existing_chains
         self.show_progressbar = show_progressbar
-        Utils.mcmc_sampling( self, nsteps=nsteps, verbose=verbose )
+        if isinstance( self.step_method, BuiltinStepMethods.AffineInvariant ):
+            Utils.emcee_sampling( self, nsteps=nsteps, init_walkers=kwargs['init_walkers'], verbose=verbose )
+        else:
+            Utils.mcmc_sampling( self, nsteps=nsteps, verbose=verbose )
         if pickle_chain!=None:
             Utils.pickle_chain( self, pickle_chain=pickle_chain, thin_before_pickling=thin_before_pickling )
 
@@ -315,8 +319,6 @@ class Stoch():
         if random_func==None:
             random_draw = Utils.blank_random
         else:
-            #kwargs = Utils.extract_stochastics_values( self.parents )
-            #random_draw = random_func( **kwargs )
             parent_vals = Utils.extract_stochastics_values( self.parents )
             random_draw = random_func( parent_vals )
         self.value = random_draw

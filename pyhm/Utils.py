@@ -9,6 +9,11 @@ except:
     print '\nProblem importing ProgressBar - skipping'
     print '(perhaps ipython not installed?)\n'
     progressbar_imported = False
+try:
+    import emcee
+    emcee_imported = True
+except:
+    emcee_imported = False
 
 """
 This module contains various utility routines, including the
@@ -111,6 +116,75 @@ def nested_sampling( sampler, n_active, stopping_criterion=[ 'Z_convergence', 0.
     sampler.active_set['matrix'] = active_pars
     sampler.active_set['logp'] = active_logp
     return None
+
+
+def emcee_sampling( sampler, nsteps=100, init_walkers={}, verbose=False ):
+    """
+    Routine to implement affine invariant sampling using the emcee code
+    written by Dan Foreman-Mackey. This requires emcee to be installed.
+      ** sampler - An MCMC sampler object.
+      ** nsteps - The number of steps to be taken by each walker.
+      ** init_walkers - A dictionary containing the starting values
+      for each walker, arranged by parameter.
+    """    
+
+    if emcee_imported==False:
+        err_str = 'Could not import emcee - aborting'
+        raise StandardError( err_str )
+
+    if ( sampler.show_progressbar==True ):
+        print '\nProgress bar not available for emcee\n'
+
+    unobs_stochs = sampler.model.free
+    unobs_stochs_keys = unobs_stochs.keys()
+    for key in unobs_stochs_keys:
+        if np.isfinite( unobs_stochs[key].logp() )==False:
+            err_str = 'Initial value for {0} outside prior range'.format( key )
+            raise StandardError( err_str )
+    if np.isfinite( sampler.logp() )==False:
+        err_str = 'Model likelihood is not finite - abandoning'.format( key )
+        raise StandardError( err_str )
+
+    # Need to re-define the log likelihood in format required by emcee:
+    npar = len( unobs_stochs_keys )
+    def logp_emcee( pars, *args ):
+        for i in range( npar ):
+            key = unobs_stochs_keys[i]
+            unobs_stochs[key].value = pars[i]
+        logp_val = sampler.logp()
+        return logp_val
+
+    p0 = []
+    for key in unobs_stochs_keys:
+        p0 += [ init_walkers[key] ]
+    p0 = np.column_stack( p0 )
+    nwalkers = np.shape( p0 )[0]
+    z = emcee.EnsembleSampler( nwalkers, npar, logp_emcee )
+    z.run_mcmc( p0, nsteps )
+
+    sampler.walker_chain = {}
+    for i in range( npar ):
+        key = unobs_stochs_keys[i]
+        sampler.walker_chain[key] = z.chain[:,:,i].T
+
+    return None
+
+
+def collapse_walker_chain( walker_chain, nburn=0 ):
+    """
+    Takes emcee walker chains and collapses them into single
+    chains, one for each parameter. An optional burn-in range
+    from can be discarded from the beginning of each walker
+    chain prior to combining them together.
+    """
+    if nburn==None:
+        nburn = 0
+    keys = walker_chain.keys()
+    npar = len( keys )
+    chain = {}
+    for key in keys:
+        chain[key] = walker_chain[key][nburn:,:].flatten()
+    return chain
 
 
 def mcmc_sampling( sampler, nsteps=1000, show_progressbar=True, verbose=False ):

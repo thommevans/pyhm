@@ -37,7 +37,7 @@ def Gaussian( name, mu=0.0, sigma=1.0, value=None, observed=False, dtype=float )
         
     def random( parent_values ):
         mu = parent_values['mu']
-        sigma = parent_values['sigma']        
+        sigma = parent_values['sigma']
         return np.random.normal( mu, sigma )
 
     if value==None:

@@ -58,3 +58,16 @@ class MetropolisHastings():
         self.proposal_distribution.pretune( mcmc, **kwargs )
 
     
+class AffineInvariant():
+    """
+    """
+
+    def __init__( self ):
+        """
+        Initialises the sampling algorithm.
+        """
+        self.proposal_distribution = None
+
+
+
+    
