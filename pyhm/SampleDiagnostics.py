@@ -2,6 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pdb
 import copy
+try:
+    import emcee
+    emcee_imported = True
+except:
+    emcee_imported = False
 
 """
 This module defines various routines that are useful for quickly inspecting
@@ -311,6 +316,35 @@ def gelman_rubin( chain_list, nburn=0, thin=1 ):
                  
     return grs
 
+
+def walker_chain_autocorr( walker_chain, nburn=None, maxlag=50 ):
+    """
+    Computes the autocorrelation function and integrated autocorrelation times
+    for each parameter, using the routines from emcee.
+    """
+
+    if nburn==None:
+        nburn = 0
+
+    keys = walker_chain.keys()
+    keys.remove( 'logp' )
+    npar = len( keys )
+    nsteps, nwalkers = np.shape( walker_chain['logp'] )
+    y = np.zeros( [ nsteps-nburn, npar ] ) 
+    for i in range( npar ):
+        y[:,i] = np.mean( walker_chain[keys[i]][nburn:,:], axis=1 ) # average over walkers
+    
+    acor_func_arr = emcee.autocorr.function( y, axis=0, fast=False )
+    acor_integ_arr = emcee.autocorr.integrated_time( y, axis=0, window=maxlag, fast=False )
+
+    acor_func = {}
+    acor_integ = {}
+    for i in range( npar ):
+        acor_func[keys[i]] = acor_func_arr[:,i]
+        acor_integ[keys[i]] = acor_integ_arr[i]
+
+    return acor_func, acor_integ
+    
 
 def chain_properties( chain, nburn=None, thin=None, print_to_screen=True ):
 

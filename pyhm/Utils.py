@@ -162,10 +162,15 @@ def emcee_sampling( sampler, nsteps=100, init_walkers={}, verbose=False ):
     z = emcee.EnsembleSampler( nwalkers, npar, logp_emcee )
     z.run_mcmc( p0, nsteps )
 
+    #print '\nemcee acor values:'
+    #for i in range( len( unobs_stochs_keys ) ):
+    #    print unobs_stochs_keys[i], z.acor[i]
+
     sampler.walker_chain = {}
     for i in range( npar ):
         key = unobs_stochs_keys[i]
         sampler.walker_chain[key] = z.chain[:,:,i].T
+    sampler.walker_chain['logp'] = z.lnprobability.T
 
     return None
 
