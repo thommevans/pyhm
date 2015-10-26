@@ -132,9 +132,6 @@ def emcee_sampling( sampler, nsteps=100, init_walkers={}, verbose=False ):
         err_str = 'Could not import emcee - aborting'
         raise StandardError( err_str )
 
-    if ( sampler.show_progressbar==True ):
-        print '\nProgress bar not available for emcee\n'
-
     unobs_stochs = sampler.model.free
     unobs_stochs_keys = unobs_stochs.keys()
     for key in unobs_stochs_keys:
@@ -160,11 +157,13 @@ def emcee_sampling( sampler, nsteps=100, init_walkers={}, verbose=False ):
     p0 = np.column_stack( p0 )
     nwalkers = np.shape( p0 )[0]
     z = emcee.EnsembleSampler( nwalkers, npar, logp_emcee )
-    z.run_mcmc( p0, nsteps )
 
-    #print '\nemcee acor values:'
-    #for i in range( len( unobs_stochs_keys ) ):
-    #    print unobs_stochs_keys[i], z.acor[i]
+    pbar = progressbar( nsteps )
+    nstep_increment = int( np.round( 0.01*nsteps ) ) 
+    for i, result in enumerate( z.sample( p0, iterations=nsteps ) ):
+        if ( sampler.show_progressbar==True )*( (i+1)%nstep_increment==0 )*\
+           ( progressbar_imported==True  ):
+            pbar.animate( i+1 )
 
     sampler.walker_chain = {}
     for i in range( npar ):
