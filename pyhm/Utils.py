@@ -159,7 +159,7 @@ def emcee_sampling( sampler, nsteps=100, init_walkers={}, verbose=False ):
     z = emcee.EnsembleSampler( nwalkers, npar, logp_emcee )
 
     pbar = progressbar( nsteps )
-    nstep_increment = int( np.round( 0.01*nsteps ) ) 
+    nstep_increment = max( [ int( np.round( 0.01*nsteps ) ), 1 ] )
     for i, result in enumerate( z.sample( p0, iterations=nsteps ) ):
         if ( sampler.show_progressbar==True )*( (i+1)%nstep_increment==0 )*\
            ( progressbar_imported==True  ):

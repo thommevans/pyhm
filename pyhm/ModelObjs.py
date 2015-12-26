@@ -69,14 +69,19 @@ class MCMC():
         """
         Sample from the posterior distribution and optionally pickle the output.
         """        
-        self._overwrite_existing_chains = overwrite_existing_chains
-        self.show_progressbar = show_progressbar
-        if isinstance( self.step_method, BuiltinStepMethods.AffineInvariant ):
-            Utils.emcee_sampling( self, nsteps=nsteps, init_walkers=kwargs['init_walkers'], verbose=verbose )
+        if np.isfinite( self.logp() )==False:
+            print 'Likelihood = -inf !'
+            pdb.set_trace()
         else:
-            Utils.mcmc_sampling( self, nsteps=nsteps, verbose=verbose )
-        if pickle_chain!=None:
-            Utils.pickle_chain( self, pickle_chain=pickle_chain, thin_before_pickling=thin_before_pickling )
+            self._overwrite_existing_chains = overwrite_existing_chains
+            self.show_progressbar = show_progressbar
+            if isinstance( self.step_method, BuiltinStepMethods.AffineInvariant ):
+                Utils.emcee_sampling( self, nsteps=nsteps, init_walkers=kwargs['init_walkers'], verbose=verbose )
+            else:
+                Utils.mcmc_sampling( self, nsteps=nsteps, verbose=verbose )
+            if pickle_chain!=None:
+                Utils.pickle_chain( self, pickle_chain=pickle_chain, thin_before_pickling=thin_before_pickling )
+        return None
 
     def draw_from_prior( self ):
         """
@@ -150,11 +155,17 @@ class MAP():
         self.model = Model( stochastics )
         Utils.update_attributes( self, stochastics )
 
-    def fit( self, method='neldermead', verbose=False, maxfun=10000, maxiter=10000, ftol=None, xtol=None, gtol=None ):
+    def fit( self, method='neldermead', verbose=False, maxfun=10000, maxiter=10000, \
+             ftol=None, xtol=None, gtol=None ):
         """
         Compute the maximum a posteriori solution using specified algorithm.
         """
-        Optimizers.optimize( self, method=method, verbose=verbose, maxfun=maxfun, maxiter=maxiter, ftol=ftol, xtol=xtol, gtol=gtol )
+        if np.isfinite( self.logp() )==False:
+            print 'Likelihood = -inf !'
+            pdb.set_trace()
+        else:
+            Optimizers.optimize( self, method=method, verbose=verbose, maxfun=maxfun, maxiter=maxiter, \
+                                 ftol=ftol, xtol=xtol, gtol=gtol )
         return None
 
     def draw_from_prior( self ):
