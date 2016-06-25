@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.linalg
 import cPickle
-import pdb, sys, time
+import pdb, sys, time, collections
 try:
     from ProgressBar import progressbar
     progressbar_imported = True
@@ -578,7 +578,10 @@ def check_model_stochastics_names( model ):
     names = np.array( names, dtype=str )
     unique_names = np.unique( names )
     if nstoch!=len( unique_names ):
-        err_str = 'Model variables do not all have unique names'
+        z = [ item for item, count in collections.Counter( names ).iteritems() if count > 1 ]
+        err_str = 'Model variables do not all have unique names.'
+        err_str += '\nMultiple instances were found for:'
+        for zi in z: err_str += '\n{0}'.format( zi )
         raise ValueError( err_str )
 
     return None
