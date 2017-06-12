@@ -1,7 +1,8 @@
+from __future__ import print_function
 import numpy as np
 import pdb
-import BuiltinProposals
-import Utils
+from . import BuiltinProposals
+from . import Utils
 
 """
 This module contains definitions for algorithms to be used by MCMC objects

@@ -1,9 +1,10 @@
+from __future__ import print_function
 import numpy as np 
 import inspect
 import sys, pdb
-import Utils
-import Optimizers
-import BuiltinStepMethods
+from . import Utils
+from . import Optimizers
+from . import BuiltinStepMethods
 
 """
 This module defines the fundamental objects used for building models and
@@ -70,7 +71,7 @@ class MCMC():
         Sample from the posterior distribution and optionally pickle the output.
         """        
         if np.isfinite( self.logp() )==False:
-            print 'Likelihood = -inf !'
+            print( 'Likelihood = -inf !' )
             pdb.set_trace()
         else:
             self._overwrite_existing_chains = overwrite_existing_chains
@@ -161,7 +162,7 @@ class MAP():
         Compute the maximum a posteriori solution using specified algorithm.
         """
         if np.isfinite( self.logp() )==False:
-            print 'Likelihood = -inf !'
+            print( 'Likelihood = -inf !' )
             pdb.set_trace()
         else:
             Optimizers.optimize( self, method=method, verbose=verbose, maxfun=maxfun, maxiter=maxiter, \

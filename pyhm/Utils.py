@@ -1,13 +1,14 @@
+from __future__ import print_function
 import numpy as np
 import scipy.linalg
-import cPickle
+import pickle
 import pdb, sys, time, collections
 try:
     from ProgressBar import progressbar
     progressbar_imported = True
 except:
-    print '\nProblem importing ProgressBar - skipping'
-    print '(perhaps ipython not installed?)\n'
+    print( '\nProblem importing ProgressBar - skipping' )
+    print( '(perhaps ipython not installed?)\n' )
     progressbar_imported = False
 try:
     import emcee
@@ -327,21 +328,21 @@ def pickle_chain( sampler, pickle_chain=None, thin_before_pickling=1 ):
     for key in sampler.chain.keys():
         ochain[key] = sampler.chain[key][ixs]
 
-    opickle_file = open( pickle_chain, 'w' )
-    cPickle.dump( ochain, opickle_file )
+    opickle_file = open( pickle_chain, 'wb' )
+    pickle.dump( ochain, opickle_file )
     opickle_file.close()
-    print '\nPickled chain as:\n  {0}'.format( pickle_chain )
+    print( '\nPickled chain as:\n  {0}'.format( pickle_chain ) )
 
     return None
 
 
 def load_chain( chain_filename ):
     """
-    Uses cPickle to load a pickled chain.
+    Uses pickle module to load a pickled chain.
     """
     
-    ifile = open( chain_filename, 'r' )
-    chain = cPickle.load( ifile )
+    ifile = open( chain_filename, 'rb' )
+    chain = pickle.load( ifile )
     ifile.close()
 
     return chain
@@ -623,7 +624,7 @@ def blank_random():
     been defined.
     """
     
-    print '\nRandom not defined\n'
+    print( '\nRandom not defined\n' )
 
     return None
 

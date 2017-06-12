@@ -2,7 +2,7 @@ import numpy as np
 import pdb
 import math
 import scipy.special
-import ModelObjs, Utils
+from . import ModelObjs, Utils
 
 """
 This module contains definitions for Stochs with standard probability

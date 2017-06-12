@@ -1,5 +1,5 @@
 import sys, inspect, pdb
-import ModelObjs
+from . import ModelObjs
 
 """
 This module contains definitions for function decorators that are used

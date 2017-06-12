@@ -1,6 +1,7 @@
+from __future__ import print_function
 import numpy as np
 import scipy.optimize
-import Utils
+from . import Utils
 import sys, pdb, warnings
 
 """
@@ -90,7 +91,7 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
         xopt = scipy.optimize.fmin_powell( func, x0, ftol=ftol, maxiter=maxiter, full_output=0, disp=verbose )
     elif method=='conjgrad':
         if ftol!=None:
-            print ''
+            print( '' )
             warn_str = '\nConjugate gradient does not accept ftol (ignoring)\n'
             warnings.warn( warn_str )
             pdb.set_trace()

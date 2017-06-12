@@ -1,6 +1,7 @@
+from __future__ import print_function
 import numpy as np
 import pdb
-import Utils
+from . import Utils
 
 """
 This module contains definitions for basic proposal distribution
@@ -120,15 +121,15 @@ def tune_proposal_covmatrix( mcmc, ntune_min=0, ntune_max=0, tune_interval=500, 
         covtuned = covnew*rescale_factor
         mcmc.step_method.proposal_distribution.proposal_kwargs['covmatrix'] = covtuned
         if verbose==True:
-            print '\nAcceptance fraction = {0:.2f} (from last {1:.0f} steps)'.format( accfrac, tune_interval )
-            print 'nconsecutive = {0:.0f} (require {1:.0f})'.format( nsuccess, nconsecutive )
-            print 'Total tuning steps taken = {0:.0f}'.format( nsteps )
-            print '(ntune_min={0:.0f}, ntune_max={1:.0f})\n'.format( ntune_min, ntune_max )
+            print( '\nAcceptance fraction = {0:.2f} (from last {1:.0f} steps)'.format( accfrac, tune_interval ) )
+            print( 'nconsecutive = {0:.0f} (require {1:.0f})'.format( nsuccess, nconsecutive ) )
+            print( 'Total tuning steps taken = {0:.0f}'.format( nsteps ) )
+            print( '(ntune_min={0:.0f}, ntune_max={1:.0f})\n'.format( ntune_min, ntune_max ) )
     if nsteps>ntune_max:
         warn_str = '\nAborting tuning - maximum step limit reached'
         warnings.warn( warn_str )
     elif verbose==True:
-        print '\nTuning finished with step acceptance rate of {0:.2f}%'.format( accfrac*100 ) 
+        print( '\nTuning finished with step acceptance rate of {0:.2f}%'.format( accfrac*100 )  )
     mcmc.step_method.proposal_distribution.proposal_kwargs['covmatrix'] = cov1
 
     return covtuned
@@ -271,17 +272,17 @@ def tune_diagonal_gaussian_step_sizes( mcmc, step_sizes, ntune_iterlim=0, tune_i
                 else:
                     nsuccess = 0
                 if verbose==True:
-                    print '\nPre-tuning update for parameter {0} ({1} of {2}):'\
-                          .format( key_j, j+1, npars )
-                    print 'Consecutive successes = {0}'.format( nsuccess )
-                    print 'Accepted fraction from last {0} steps = {1}'\
-                          .format( n, accfrac_j )
-                    print '(require {0} consecutive intervals with acceptance rate 0.2-0.4)'\
-                          .format( nconsecutive )
-                    print 'Median value of last {0} steps: median( {1} )={2} '\
-                          .format( n, key_j, np.median( current_values[key_j] ) )
-                    print 'Starting value for comparison: {0}'.format( orig_stoch_values[key_j] )
-                    print 'Current stepsize: {0}'.format( step_sizes[key_j] )
+                    print( '\nPre-tuning update for parameter {0} ({1} of {2}):'\
+                           .format( key_j, j+1, npars ) )
+                    print( 'Consecutive successes = {0}'.format( nsuccess ) )
+                    print( 'Accepted fraction from last {0} steps = {1}'\
+                           .format( n, accfrac_j ) )
+                    print( '(require {0} consecutive intervals with acceptance rate 0.2-0.4)'\
+                          .format( nconsecutive ) )
+                    print( 'Median value of last {0} steps: median( {1} )={2} '\
+                          .format( n, key_j, np.median( current_values[key_j] ) ) )
+                    print( 'Starting value for comparison: {0}'.format( orig_stoch_values[key_j] ) )
+                    print( 'Current stepsize: {0}'.format( step_sizes[key_j] ) )
 
     # Having tuned the relative step sizes, now rescale them together
     # to refine the joint step sizes if requested:
@@ -291,7 +292,7 @@ def tune_diagonal_gaussian_step_sizes( mcmc, step_sizes, ntune_iterlim=0, tune_i
         rescale_factor = 1.0/np.sqrt( npars )
         tuning_chain = np.zeros( n, dtype=int )
         if verbose==True:
-            print '\n\nNow tuning the step sizes simultaneously...\n'
+            print( '\n\nNow tuning the step sizes simultaneously...\n' )
         while i<m+1:
 
             # If there have been nconsecutive successful tune intervals
@@ -371,11 +372,11 @@ def tune_diagonal_gaussian_step_sizes( mcmc, step_sizes, ntune_iterlim=0, tune_i
                             rescale_factor = 1.6
 
                     if verbose==True:
-                        print 'Consecutive successes = {0}'.format( nsuccess )
-                        print 'Accepted fraction from last {0} steps = {1}'\
-                              .format( n, accfrac )
+                        print( 'Consecutive successes = {0}'.format( nsuccess ) )
+                        print( 'Accepted fraction from last {0} steps = {1}'\
+                              .format( n, accfrac ) )
 
-        print 'Finished tuning with acceptance rate of {0:.1f}%'.format( accfrac*100 )
+        print( 'Finished tuning with acceptance rate of {0:.1f}%'.format( accfrac*100 ) )
 
     for key in keys:
         unobs_stochs[key].value = orig_stoch_values[key]

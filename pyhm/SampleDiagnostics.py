@@ -1,3 +1,4 @@
+from __future__ import print_function
 import matplotlib.pyplot as plt
 import numpy as np
 import pdb
@@ -219,9 +220,9 @@ def plot_chain_autocorrs( chain, nburn=None, maxlag=None, thin_before_plotting=N
     nfigs = int( np.ceil( float( npars )/nax_perfig ) )
 
     figcount = 0
-    print '\nComputing autocorrelations:'
+    print( '\nComputing autocorrelations:' )
     for i in range( npars ):
-        print '... parameter {0} of {1}'.format( i+1, npars )
+        print( '... parameter {0} of {1}'.format( i+1, npars ) )
         subaxn = i%nax_perfig + 1
         if subaxn==1:
             figcount += 1
@@ -359,7 +360,7 @@ def chain_properties( chain, nburn=None, thin=None, print_to_screen=True ):
     u34 = {}
 
     if print_to_screen==True:
-        print '\n{0}\nParameter --> Mean, Stdev:'.format( '#'*50 )
+        print( '\n{0}\nParameter --> Mean, Stdev:'.format( '#'*50 ) )
     for i in range( npars ):
         parkey += [ str( freepars[i] ) ]
         chain_i = chain[freepars[i]]
@@ -372,10 +373,10 @@ def chain_properties( chain, nburn=None, thin=None, print_to_screen=True ):
         mean[parkey[i]] = np.mean( chain_i )
         stdev[parkey[i]] = np.std( chain_i )
         if print_to_screen==True:
-            print '  {0} --> {1}, {2}'.format( freepars[i], mean[parkey[i]], stdev[parkey[i]] )
+            print( '  {0} --> {1}, {2}'.format( freepars[i], mean[parkey[i]], stdev[parkey[i]] ) )
 
     if print_to_screen==True:
-        print '\n{0}\nParameter --> Median, -34%, +34%:'.format( '#'*50 )
+        print( '\n{0}\nParameter --> Median, -34%, +34%:'.format( '#'*50 ) )
     for i in range( npars ):
         chain_i = chain[freepars[i]]
         if nburn!=None:
@@ -393,8 +394,8 @@ def chain_properties( chain, nburn=None, thin=None, print_to_screen=True ):
         l34[parkey[i]] = deltas[ixsl][np.argsort( deltas[ixsl] )][-n34]
         u34[parkey[i]] = deltas[ixsu][np.argsort( deltas[ixsu] )][n34]
         if print_to_screen==True:
-            print '  {0} --> {1}, {2}, {3}'.format( freepars[i], median[parkey[i]], \
-                                                    l34[parkey[i]], u34[parkey[i]] )
+            print( '  {0} --> {1}, {2}, {3}'.format( freepars[i], median[parkey[i]], \
+                                                    l34[parkey[i]], u34[parkey[i]] ) )
     output = {}
     output['mean'] = {}
     output['median'] = {}
@@ -417,7 +418,7 @@ def print_chain_properties_OLD( sampler, nburn=None, thin=None ):
     freepars = get_freepars( chain )
     npars = len( freepars )
 
-    print '\n{0}\nParameter --> Mean, Median, Stdev:'.format( '#'*50 )
+    print( '\n{0}\nParameter --> Mean, Median, Stdev:'.format( '#'*50 ) )
     for i in range( npars ):
         chain_i = chain[freepars[i]]
         if nburn!=None:
@@ -429,7 +430,7 @@ def print_chain_properties_OLD( sampler, nburn=None, thin=None ):
         mean = np.mean( chain_i )
         median = np.median( chain_i )
         stdev = np.std( chain_i )
-        print '  {0} --> {1}, {2}, {3}'.format( freepars[i], mean, median, stdev )
+        print( '  {0} --> {1}, {2}, {3}'.format( freepars[i], mean, median, stdev ) )
 
     return None
 
