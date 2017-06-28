@@ -327,7 +327,7 @@ def walker_chain_autocorr( walker_chain, nburn=None, maxlag=50 ):
     if nburn==None:
         nburn = 0
 
-    keys = walker_chain.keys()
+    keys = list( walker_chain.keys() )
     keys.remove( 'logp' )
     npar = len( keys )
     nsteps, nwalkers = np.shape( walker_chain['logp'] )

@@ -4,7 +4,7 @@ import scipy.linalg
 import pickle
 import pdb, sys, time, collections
 try:
-    from ProgressBar import progressbar
+    from .ProgressBar import progressbar
     progressbar_imported = True
 except:
     print( '\nProblem importing ProgressBar - skipping' )
@@ -134,7 +134,7 @@ def emcee_sampling( sampler, nsteps=100, init_walkers={}, verbose=False ):
         raise StandardError( err_str )
 
     unobs_stochs = sampler.model.free
-    unobs_stochs_keys = unobs_stochs.keys()
+    unobs_stochs_keys = list( unobs_stochs.keys() )
     for key in unobs_stochs_keys:
         if np.isfinite( unobs_stochs[key].logp() )==False:
             err_str = 'Initial value for {0} outside prior range'.format( key )

@@ -36,7 +36,7 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
     
     model = MAP.model
     free_stochastics = Utils.unobserved_stochastics( model.stochastics )
-    keys = free_stochastics.keys()
+    keys = list( free_stochastics.copy().keys() )
 
     # Go through each of the stochastics, and unpack all of
     # their values into a single array; as part of this, fill

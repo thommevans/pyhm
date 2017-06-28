@@ -4,6 +4,7 @@ Modified from original code by Corey Goldberg (2010) as
 part of PyMC package, and subsequently copied into pyhm.
 """
 
+from __future__ import print_function
 import sys, time
 try:
     from IPython.core.display import clear_output
@@ -26,9 +27,9 @@ class progressbar:
 
     def animate_noipython( self, iter ):
         if sys.platform.lower().startswith( 'win' ):
-            print self, '\r',
+            print( self, '\r', )
         else:
-            print self, chr( 27 ) + '[A'
+            print( self, chr( 27 ) + '[A' )
         self.update_iteration( iter )
         # time.sleep( 0.5 )
 
@@ -38,7 +39,7 @@ class progressbar:
         except Exception:
             # terminal IPython has no clear_output
             pass
-        print '\r', self,
+        print( '\r', self, )
         sys.stdout.flush()
         self.update_iteration( iter )
 
@@ -51,7 +52,7 @@ class progressbar:
         all_full = self.width - 2
         num_hashes = int( round( ( percent_done / 100.0 ) * all_full ) )
         self.prog_bar = '[' + self.fill_char * num_hashes + ' ' * ( all_full - num_hashes ) + ']'
-        pct_place = ( len( self.prog_bar ) / 2 ) - len( str( percent_done ) )
+        pct_place = int( ( len( self.prog_bar ) / 2 ) - len( str( percent_done ) ) )
         pct_string = '%d%%' % percent_done
         self.prog_bar = self.prog_bar[0:pct_place] + \
             ( pct_string + self.prog_bar[pct_place + len( pct_string ):] )
