@@ -70,18 +70,18 @@ class MCMC():
         """
         Sample from the posterior distribution and optionally pickle the output.
         """        
-        if np.isfinite( self.logp() )==False:
-            print( 'Likelihood = -inf !' )
-            pdb.set_trace()
+        self._overwrite_existing_chains = overwrite_existing_chains
+        self.show_progressbar = show_progressbar
+        if isinstance( self.step_method, BuiltinStepMethods.AffineInvariant ):
+            Utils.emcee_sampling( self, nsteps=nsteps, init_walkers=kwargs['init_walkers'], verbose=verbose )
         else:
-            self._overwrite_existing_chains = overwrite_existing_chains
-            self.show_progressbar = show_progressbar
-            if isinstance( self.step_method, BuiltinStepMethods.AffineInvariant ):
-                Utils.emcee_sampling( self, nsteps=nsteps, init_walkers=kwargs['init_walkers'], verbose=verbose )
+            if np.isfinite( self.logp() )==False:
+                print( 'Likelihood = -inf !' )
+                pdb.set_trace()
             else:
                 Utils.mcmc_sampling( self, nsteps=nsteps, verbose=verbose )
-            if pickle_chain!=None:
-                Utils.pickle_chain( self, pickle_chain=pickle_chain, thin_before_pickling=thin_before_pickling )
+        if pickle_chain!=None:
+            Utils.pickle_chain( self, pickle_chain=pickle_chain, thin_before_pickling=thin_before_pickling )
         return None
 
     def draw_from_prior( self ):

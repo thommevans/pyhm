@@ -135,13 +135,13 @@ def emcee_sampling( sampler, nsteps=100, init_walkers={}, verbose=False ):
 
     unobs_stochs = sampler.model.free
     unobs_stochs_keys = list( unobs_stochs.keys() )
-    for key in unobs_stochs_keys:
-        if np.isfinite( unobs_stochs[key].logp() )==False:
-            err_str = 'Initial value for {0} outside prior range'.format( key )
-            raise StandardError( err_str )
-    if np.isfinite( sampler.logp() )==False:
-        err_str = 'Model likelihood is not finite - abandoning'.format( key )
-        raise StandardError( err_str )
+    #for key in unobs_stochs_keys:
+    #    if np.isfinite( unobs_stochs[key].logp() )==False:
+    #        err_str = 'Initial value for {0} outside prior range'.format( key )
+    #        raise StandardError( err_str )
+    #if np.isfinite( sampler.logp() )==False:
+    #    err_str = 'Model likelihood is not finite - abandoning'.format( key )
+    #    raise StandardError( err_str )
 
     # Need to re-define the log likelihood in format required by emcee:
     npar = len( unobs_stochs_keys )
