@@ -42,7 +42,7 @@ def plot_running_chain_means( chain, thin_before_plotting=None ):
     for i in range( npars ):
         rmeans[:,i] /= stepcount
 
-    if thin_before_plotting==None:
+    if thin_before_plotting is None:
         if nsteps<2000:
             thin = 1
         else:
@@ -84,7 +84,7 @@ def plot_chain_traces( chain, nburn=0, show_burn=True, thin_before_plotting=None
     npars = len( freepars )
     stepcount = np.arange( 1, nsteps+1 )
 
-    if thin_before_plotting==None:
+    if thin_before_plotting is None:
         if nsteps<2000:
             thin_before_plotting = 1
         else:
@@ -143,7 +143,7 @@ def plot_chain_densities( chain, nburn=0, nbins=30, show_burn=True, thin_before_
     npars = len( freepars )
     stepcount = np.arange( 1, nsteps+1 )
 
-    if thin_before_plotting==None:
+    if thin_before_plotting is None:
         if nsteps<2000:
             thin_before_plotting = 1
         else:
@@ -196,17 +196,17 @@ def plot_chain_autocorrs( chain, nburn=None, maxlag=None, thin_before_plotting=N
 
     chain = copy.deepcopy( chain )
     nsteps = len( chain['accepted'] ) - nburn
-    if maxlag==None:
+    if maxlag is None:
         maxlag = min( [ nsteps, 200 ] )
 
-    if nburn==None:
+    if nburn is None:
         nburn = 0
 
     freepars = get_freepars( chain )
     npars = len( freepars )
     stepcount = np.arange( 1, nsteps+1 )
 
-    if thin_before_plotting==None:
+    if thin_before_plotting is None:
         if nsteps<2000:
             thin_before_plotting = 1
         else:
@@ -324,7 +324,7 @@ def walker_chain_autocorr( walker_chain, nburn=None, maxlag=50 ):
     for each parameter, using the routines from emcee.
     """
 
-    if nburn==None:
+    if nburn is None:
         nburn = 0
 
     keys = list( walker_chain.keys() )
@@ -364,10 +364,10 @@ def chain_properties( chain, nburn=None, thin=None, print_to_screen=True ):
     for i in range( npars ):
         parkey += [ str( freepars[i] ) ]
         chain_i = chain[freepars[i]]
-        if nburn!=None:
+        if nburn is not None:
             chain_i = chain_i[nburn:]
         nsteps = len( chain_i )
-        if thin!=None:
+        if thin is not None:
             ixs = ( np.arange( nsteps )%thin==0 )
             chain_i = chain_i[ixs]
         mean[parkey[i]] = np.mean( chain_i )
@@ -379,10 +379,10 @@ def chain_properties( chain, nburn=None, thin=None, print_to_screen=True ):
         print( '\n{0}\nParameter --> Median, -34%, +34%:'.format( '#'*50 ) )
     for i in range( npars ):
         chain_i = chain[freepars[i]]
-        if nburn!=None:
+        if nburn is not None:
             chain_i = chain_i[nburn:]
         nsteps = len( chain_i )
-        if thin!=None:
+        if thin is not None:
             ixs = ( np.arange( nsteps )%thin==0 )
             chain_i = chain_i[ixs]
         median[parkey[i]] = np.median( chain_i )
@@ -421,10 +421,10 @@ def print_chain_properties_OLD( sampler, nburn=None, thin=None ):
     print( '\n{0}\nParameter --> Mean, Median, Stdev:'.format( '#'*50 ) )
     for i in range( npars ):
         chain_i = chain[freepars[i]]
-        if nburn!=None:
+        if nburn is not None:
             chain_i = chain_i[nburn:]
         nsteps = len( chain_i )
-        if thin!=None:
+        if thin is not None:
             ixs = ( np.arange( nsteps )%thin==0 )
             chain_i = chain_i[ixs]
         mean = np.mean( chain_i )

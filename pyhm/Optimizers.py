@@ -77,25 +77,25 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
 
     # Run the optimizer specified in the call:
     if method=='neldermead':
-        if ftol==None:
+        if ftol is None:
             ftol = 1e-4
-        if xtol==None:
+        if xtol is None:
             xtol = 1e-4
         xopt = scipy.optimize.fmin( func, x0, xtol=xtol, ftol=ftol, maxiter=maxiter, maxfun=maxfun, \
                                     full_output=0, disp=verbose )
     elif method=='powell':
-        if ftol==None:
+        if ftol is None:
             ftol = 1e-4
-        if xtol==None:
+        if xtol is None:
             xtol = 1e-4
         xopt = scipy.optimize.fmin_powell( func, x0, ftol=ftol, maxiter=maxiter, full_output=0, disp=verbose )
     elif method=='conjgrad':
-        if ftol!=None:
+        if ftol is not None:
             print( '' )
             warn_str = '\nConjugate gradient does not accept ftol (ignoring)\n'
             warnings.warn( warn_str )
             pdb.set_trace()
-        if gtol!=None:
+        if gtol is not None:
             gtol = 1e-4 # stop when gradient less than this
         xopt = scipy.optimize.fmin_cg( func, x0, maxiter=maxiter, full_output=0, disp=verbose, gtol=gtol )
     else:

@@ -80,7 +80,7 @@ class MCMC():
                 pdb.set_trace()
             else:
                 Utils.mcmc_sampling( self, nsteps=nsteps, verbose=verbose )
-        if pickle_chain!=None:
+        if pickle_chain is not None:
             Utils.pickle_chain( self, pickle_chain=pickle_chain, thin_before_pickling=thin_before_pickling )
         return None
 
@@ -111,7 +111,7 @@ class NestedSampler():
                 pickle_chain=None, thin_before_pickling=1, verbose=False ):
 
         Utils.nested_sampling( self, n_active, stopping_criterion=stopping_criterion, verbose=verbose )
-        if pickle_chain!=None:
+        if pickle_chain is not None:
             Utils.pickle_chain( self, pickle_chain=pickle_chain, thin_before_pickling=thin_before_pickling )
 
     def draw_from_prior( self ):
@@ -312,13 +312,12 @@ class Stoch():
         self.value = dictionary['value']
         self._logp_basefunc = dictionary['logp']
         self._random_basefunc = dictionary['random']
-        if ( self.observed==True )*( self.value==None ):
+        if ( self.value is None )*( self.observed is True ):
             err_str = 'Observed variables must have value defined'
             raise ValueError(err_str)
-
     def logp( self ):
         logp_func = self._logp_basefunc
-        if self.value==None:
+        if self.value is None:
             err_str = '\nStochastic {0} value not defined - can\'t compute logp'.\
                       format( self.name )
             raise ValueError(err_str)
@@ -328,7 +327,7 @@ class Stoch():
 
     def random( self ):
         random_func = self._random_basefunc
-        if random_func==None:
+        if random_func is None:
             random_draw = Utils.blank_random
         else:
             parent_vals = Utils.extract_stochastics_values( self.parents )

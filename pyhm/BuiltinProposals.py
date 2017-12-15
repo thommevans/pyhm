@@ -69,7 +69,7 @@ class diagonal_gaussian():
         
     def pretune( self, mcmc, ntune_iterlim=0, tune_interval=None, verbose=False, nconsecutive=4 ):
         keys = mcmc.model.free.keys()
-        if self.proposal_kwargs['step_sizes']==None:
+        if self.proposal_kwargs['step_sizes'] is None:
             self.proposal_kwargs['step_sizes'] = {}
             for key in keys:
                 self.proposal_kwargs['step_sizes'][key] = 1.

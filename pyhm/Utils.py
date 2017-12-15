@@ -182,7 +182,7 @@ def collapse_walker_chain( walker_chain, nburn=0 ):
     from can be discarded from the beginning of each walker
     chain prior to combining them together.
     """
-    if nburn==None:
+    if nburn is None:
         nburn = 0
     keys = walker_chain.keys()
     npar = len( keys )
@@ -198,7 +198,7 @@ def mcmc_sampling( sampler, nsteps=1000, show_progressbar=True, verbose=False ):
     """
 
     # Check that a StepMethod has been assigned:
-    if sampler.step_method==None:
+    if sampler.step_method is None:
         err_str = 'Step method must be assigned before sampling can begin'
         raise StandardError( err_str )
     else:
@@ -317,7 +317,7 @@ def pickle_chain( sampler, pickle_chain=None, thin_before_pickling=1 ):
     posterior distribution.
     """
     
-    if pickle_chain==None:
+    if pickle_chain is None:
         pickle_chain = 'chain.pkl'
 
     if thin_before_pickling>1:

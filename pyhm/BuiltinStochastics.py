@@ -40,7 +40,7 @@ def Gaussian( name, mu=0.0, sigma=1.0, value=None, observed=False, dtype=float )
         sigma = parent_values['sigma']
         return np.random.normal( mu, sigma )
 
-    if value==None:
+    if value is None:
         value = random( parent_values )
 
     dictionary = { 'name':name, 'observed':observed, 'dtype':dtype, 'parents':parents, \
@@ -64,7 +64,7 @@ def Uniform( name, lower=0.0, upper=1.0, value=None, observed=False, dtype=float
     parents = { 'lower':lower, 'upper':upper }
     parent_values = Utils.extract_stochastics_values( parents )
 
-    if ( value!=None )*( np.rank( value )>0 ):
+    if ( value is not None )*( np.rank( value )>0 ):
         n = len( value.flatten() )
     else:
         n = 1
@@ -87,7 +87,7 @@ def Uniform( name, lower=0.0, upper=1.0, value=None, observed=False, dtype=float
         else:
             return np.random.uniform( low=lower, high=upper )
 
-    if value==None:
+    if value is None:
         value = random( parent_values )
 
     dictionary = { 'name':name, 'observed':observed, 'dtype':dtype, 'parents':parents, \
@@ -144,7 +144,7 @@ def Gamma( name, alpha=1, beta=1, value=None, observed=False, dtype=float ):
         err_str = 'alpha and beta parameters must both be >0'
         raise ValueError( err_str )
 
-    if value==None:
+    if value is None:
         value = random( parent_values )
     dictionary = { 'name':name, 'observed':observed, 'dtype':dtype, 'parents':parents, \
                    'value':value, 'logp':logp, 'random':random }

@@ -55,7 +55,7 @@ def stochastic( label=None, func=None, observed=False, dtype=float ):
         dictionary = {}
 
         # Extract the basic properties:
-        if label!=None:
+        if label is not None:
             dictionary['name'] = label
         else:
             dictionary['name'] = func.__name__
@@ -77,11 +77,11 @@ def stochastic( label=None, func=None, observed=False, dtype=float ):
         sys.settrace( probe_func )
         func()
 
-        if dictionary['logp']==None:
+        if dictionary['logp'] is None:
             err_str = '\nStochastic {0} logp not defined'\
                       .format( dictionary['name'] )
             raise ValueError(err_str)
-        if ( dictionary['random']!=None )*( dictionary['observed']==True ):
+        if ( dictionary['random'] is not None )*( dictionary['observed']==True ):
             err_str = '\nCan\'t have random function defined for Stochastic {0}'\
                       .format( dictionary['name'] )
             err_str += 'because \'observed\' is set to True'
@@ -92,7 +92,7 @@ def stochastic( label=None, func=None, observed=False, dtype=float ):
         # provided in the parents input dictionary:
         parents = {}
         ( args, varargs, varkw, defaults ) = inspect.getargspec( func )
-        if defaults==None:
+        if defaults is None:
             defaults = []
 
         # Check if value has been provided:
