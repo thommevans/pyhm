@@ -11,6 +11,7 @@ try:
     have_ipython = True
 except ImportError:
     have_ipython = False
+#have_ipython = True
 
 class progressbar:
 
@@ -24,13 +25,15 @@ class progressbar:
             self.animate = self.animate_ipython
         else:
             self.animate = self.animate_noipython
-
+        sys.stdout.flush()
+        
     def animate_noipython( self, iter ):
         if sys.platform.lower().startswith( 'win' ):
             print( self, '\r', )
         else:
             print( self, chr( 27 ) + '[A' )
         self.update_iteration( iter )
+        sys.stdout.flush()
         # time.sleep( 0.5 )
 
     def animate_ipython( self, iter ):
@@ -46,7 +49,8 @@ class progressbar:
     def update_iteration( self, elapsed_iter ):
         self.__update_amount( ( elapsed_iter / float( self.iterations ) ) * 100.0 )
         self.prog_bar += '  %d of %s complete' % ( elapsed_iter, self.iterations )
-
+        sys.stdout.flush()
+        
     def __update_amount( self, new_amount ):
         percent_done = int( round( ( new_amount / 100.0 ) * 100.0 ) )
         all_full = self.width - 2
@@ -56,6 +60,7 @@ class progressbar:
         pct_string = '%d%%' % percent_done
         self.prog_bar = self.prog_bar[0:pct_place] + \
             ( pct_string + self.prog_bar[pct_place + len( pct_string ):] )
-
+        sys.stdout.flush()
+        
     def __str__( self ):
         return str( self.prog_bar )
