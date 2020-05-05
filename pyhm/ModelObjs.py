@@ -77,9 +77,9 @@ class MCMC():
         else:
             if np.isfinite( self.logp() )==False:
                 print( 'Likelihood = -inf !' )
-                print( 'Prior likelihoods:' )
+                print( 'Initial values and prior likelihoods:' )
                 for k in list( self.model.free.keys() ):
-                    print( k, self.model.free[k].logp() )
+                    print( '{0}={1} (logp={2})'.format( k, self.model.free[k].value, self.model.free[k].logp() ) )
                 pdb.set_trace()
             else:
                 Utils.mcmc_sampling( self, nsteps=nsteps, verbose=verbose )
@@ -166,9 +166,9 @@ class MAP():
         """
         if np.isfinite( self.logp() )==False:
             print( 'Likelihood = -inf !' )
-            print( 'Prior likelihoods:' )
+            print( 'Initial values and prior likelihoods:' )
             for k in list( self.model.free.keys() ):
-                print( k, self.model.free[k].logp() )
+                print( '{0}={1} (logp={2})'.format( k, self.model.free[k].value, self.model.free[k].logp() ) )                
             pdb.set_trace()
         else:
             Optimizers.optimize( self, method=method, verbose=verbose, maxfun=maxfun, maxiter=maxiter, \

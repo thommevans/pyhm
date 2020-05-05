@@ -48,7 +48,7 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
     stochixs = np.array( [] )
     for i in range( nstoch ):
         value = free_stochastics[keys[i]].value
-        if np.rank( value )==0:
+        if np.ndim( value )==0:
             x0 = np.concatenate( [ x0, [ value ] ] )
             stochixs = np.concatenate( [ stochixs, [ i ] ] )
         else:
@@ -69,7 +69,7 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
         for i in range( nstoch ):
             ixs = ( stochixs==i )
             x_val = x[ixs]
-            if ( np.rank( x_val )==1 )*( len( x_val )==1 ):
+            if ( np.ndim( x_val )==1 )*( len( x_val )==1 ):
                 model.stochastics[keys[i]].value = float( x[ixs] )
             else:
                 model.stochastics[keys[i]].value = np.array( x[ixs] )
@@ -106,7 +106,7 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
     for i in range( nstoch ):
         ixs = ( stochixs==i )
         xopt_i = xopt[ixs]
-        if np.rank( xopt_i )==0:
+        if np.ndim( xopt_i )==0:
             free_stochastics[keys[i]].value = float( xopt_i )
         else:
             if len( xopt_i )==1:
