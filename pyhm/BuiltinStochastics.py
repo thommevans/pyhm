@@ -27,7 +27,7 @@ def Gaussian( name, mu=0.0, sigma=1.0, value=None, observed=False, dtype=float )
     def logp( value, parent_values ):
         mu_value = parent_values['mu']
         sigma_value = parent_values['sigma']
-        if np.rank( value )==0:
+        if np.ndim( value )==0:
             logp = -0.5*math.log( 2*np.pi*( sigma_value**2. ) ) \
                    - ( ( value - mu_value )**2. )/( 2*( sigma_value**2. ) )
         else:
@@ -64,7 +64,7 @@ def Uniform( name, lower=0.0, upper=1.0, value=None, observed=False, dtype=float
     parents = { 'lower':lower, 'upper':upper }
     parent_values = Utils.extract_stochastics_values( parents )
 
-    if ( value is not None )*( np.rank( value )>0 ):
+    if ( value is not None )*( np.ndim( value )>0 ):
         n = len( value.flatten() )
     else:
         n = 1
@@ -124,7 +124,7 @@ def Gamma( name, alpha=1, beta=1, value=None, observed=False, dtype=float ):
         else:
 
             # The Python math routine is faster than numpy for single-valued inputs:
-            if np.rank( value )==0:
+            if np.ndim( value )==0:
                 logp_value = -math.lgamma( alpha_value ) + alpha_value*math.log( beta_value ) \
                              + (alpha_value-1)*math.log( value ) - beta_value*value
 
