@@ -81,14 +81,18 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
             ftol = 1e-4
         if xtol is None:
             xtol = 1e-4
-        xopt = scipy.optimize.fmin( func, x0, xtol=xtol, ftol=ftol, maxiter=maxiter, maxfun=maxfun, \
-                                    full_output=0, disp=verbose )
+        #xopt = scipy.optimize.fmin( func, x0, xtol=xtol, ftol=ftol, maxiter=maxiter, maxfun=maxfun, \
+        #                            full_output=0, disp=verbose )
+        options = { 'maxiter':maxiter, 'maxfev':maxfun, 'xatol':xtol, 'fatol':ftol, 'disp':verbose }
+        result = scipy.optimize.minimize( func, x0, method='Nelder-Mead', options=options )
     elif method=='powell':
         if ftol is None:
             ftol = 1e-4
         if xtol is None:
             xtol = 1e-4
-        xopt = scipy.optimize.fmin_powell( func, x0, ftol=ftol, maxiter=maxiter, full_output=0, disp=verbose )
+        #xopt = scipy.optimize.fmin_powell( func, x0, ftol=ftol, maxiter=maxiter, full_output=0, disp=verbose )
+        options = { 'maxiter':maxiter, 'maxfev':maxfun, 'xatol':xtol, 'fatol':ftol, 'disp':verbose }
+        result = scipy.optimize.minimize( func, x0, method='Powell', options=options )
     elif method=='conjgrad':
         if ftol is not None:
             print( '' )
@@ -97,10 +101,13 @@ def optimize( MAP, method='neldermead', verbose=False, maxfun=10000, maxiter=100
             pdb.set_trace()
         if gtol is not None:
             gtol = 1e-4 # stop when gradient less than this
-        xopt = scipy.optimize.fmin_cg( func, x0, maxiter=maxiter, full_output=0, disp=verbose, gtol=gtol )
+        #xopt = scipy.optimize.fmin_cg( func, x0, maxiter=maxiter, full_output=0, disp=verbose, gtol=gtol )
+        options = { 'maxiter':maxiter, 'maxfev':maxfun, 'xatol':xtol, 'fatol':ftol, 'disp':verbose }
+        result = scipy.optimize.minimize( func, x0, method='CG', options=options )
     else:
         pdb.set_trace() # method not recognised
-
+    xopt = result['x']
+    
     # Update the stochastic values to the best-fit values
     # obtained by the optimizer:
     for i in range( nstoch ):
