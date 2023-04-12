@@ -198,7 +198,8 @@ def tune_diagonal_gaussian_step_sizes( mcmc, step_sizes, ntune_iterlim=0, tune_i
             elif i==m:
                 err_str = 'Aborting tuning - exceeded {0} steps'.format( m )
                 err_str += '\n...consider reducing tune_interval'
-                raise StandardError( err_str )
+                #raise StandardError( err_str ) <-- removed in Python3
+                raise Exception( err_str )
 
             # Otherwise, proceed with the tuning:
             else:
@@ -304,7 +305,8 @@ def tune_diagonal_gaussian_step_sizes( mcmc, step_sizes, ntune_iterlim=0, tune_i
             elif i==m:
                 err_str = 'Aborting tuning - exceeded {0} steps'.format( m )
                 err_str += '\n...consider reducing tune_interval'
-                raise StandardError( err_str )
+                #raise StandardError( err_str ) <-- removed in Python3
+                raise Exception( err_str )
 
             # Otherwise, proceed with the tuning:
             else:

@@ -131,7 +131,8 @@ def emcee_sampling( sampler, nsteps=100, init_walkers={}, verbose=False ):
 
     if emcee_imported==False:
         err_str = 'Could not import emcee - aborting'
-        raise StandardError( err_str )
+        #raise StandardError( err_str ) <-- removed in Python3
+        raise Exception( err_str )
 
     unobs_stochs = sampler.model.free
     unobs_stochs_keys = list( unobs_stochs.keys() )
@@ -200,7 +201,8 @@ def mcmc_sampling( sampler, nsteps=1000, show_progressbar=True, verbose=False ):
     # Check that a StepMethod has been assigned:
     if sampler.step_method is None:
         err_str = 'Step method must be assigned before sampling can begin'
-        raise StandardError( err_str )
+        #raise StandardError( err_str ) <-- removed in Python3
+        raise Exception( err_str )
     else:
         step_method = sampler.step_method
 
@@ -211,10 +213,12 @@ def mcmc_sampling( sampler, nsteps=1000, show_progressbar=True, verbose=False ):
     for key in unobs_stochs_keys:
         if np.isfinite( unobs_stochs[key].logp() )==False:
             err_str = 'Initial value for {0} outside prior range'.format( key )
-            raise StandardError( err_str )
+            #raise StandardError( err_str ) <-- removed in Python3
+            raise Exception( err_str )
     if np.isfinite( sampler.logp() )==False:
         err_str = 'Model likelihood is not finite - abandoning'.format( key )
-        raise StandardError( err_str )
+        #raise StandardError( err_str ) <-- removed in Python3
+        raise Exception( err_str )
 
     sampler.nsteps = nsteps
     if ( sampler._chain_exists==False )+( sampler._overwrite_existing_chains==True ):
